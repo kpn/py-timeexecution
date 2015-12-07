@@ -1,0 +1,30 @@
+influx:
+  image: tutum/influxdb:0.8.8
+  ports:
+    - "8086:8086"
+    - "8083:8083"
+    - "4444:4444/udp"
+  environment:
+    - PRE_CREATE_DB=metrics
+    - UDP_DB=metrics
+#  volumes:
+#    - data:/data
+grafana:
+  image: grafana/grafana
+  ports:
+    - "3000:3000"
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
+influx_wait:
+  image: kpndigital/tox
+  links:
+    - influx
+  command: sh -c "while ! nc -w1 -z influx 8086; do sleep 1; done"
+app:
+  build: .
+  volumes:
+    - .:/app
+  command: tox
+  links:
+    - influx_wait
+    - influx
