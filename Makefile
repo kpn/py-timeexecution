@@ -58,7 +58,7 @@ docker/%:
 setup.py: venv
 	$(PYTHON) setup_gen.py
 
-publish: setup
+publish: setup.py
 	$(PYTHON) setup.py sdist upload
 
 build: clean venv tox setup.py

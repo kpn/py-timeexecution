@@ -1,10 +1,10 @@
 Time Execution
 ==============
+
 [![build-status-image]][travis]
 [![coverage-status-image]][codecov]
-[![pypi-version-image]][pypi]
-[![documentation-status-image]][readthedocs]
-[![pyversions-image]][pyversions]
+[![pypi-version]][pypi]
+
 
 
 Python project to time execution and log to a time series database
@@ -15,8 +15,9 @@ Features
 * TODO
 
 
-[travis]: https://travis-ci.org/kpn-digital/py-timeexecution.svg?branch=master
-[pypi]: https://img.shields.io/pypi/v/py-timeexecution.svg
-[readthedocs]: https://readthedocs.org/projects/py-timeexecution/badge/?version=latest
+[build-status-image]: https://secure.travis-ci.org/kpn-digital/py-timeexecution.svg?branch=master
+[travis]: http://travis-ci.org/kpn-digital/py-timeexecution?branch=master
+[coverage-status-image]: https://img.shields.io/codecov/c/github/kpn-digital/py-timeexecution/master.svg
 [codecov]: http://codecov.io/github/kpn-digital/py-timeexecution?branch=master
-[pyversions]: https://img.shields.io/pypi/pyversions/py-timeexecution.svg?style=flat
+[pypi-version]: https://img.shields.io/pypi/v/djangorestframework.svg
+[pypi]: https://pypi.python.org/pypi/djangorestframework
