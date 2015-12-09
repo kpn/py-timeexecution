@@ -9,6 +9,7 @@ DOCKER_COMPOSE:=$(shell which docker-compose)
 
 PIP:="venv/bin/pip"
 CMD_FROM_VENV:=". venv/bin/activate; which"
+COVERAGE=$(shell "$(CMD_FROM_VENV)" "coverage")
 TOX=$(shell "$(CMD_FROM_VENV)" "tox")
 PYTHON=$(shell "$(CMD_FROM_VENV)" "python")
 TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
@@ -21,6 +22,7 @@ tox: clean venv
 pyclean:
 	@find . -name *.pyc -delete
 	@rm -rf *.egg-info build
+	@rm -rf coverage.xml .coverage
 
 docsclean:
 	@rm -fr docs/_build/
