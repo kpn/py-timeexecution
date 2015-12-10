@@ -7,7 +7,7 @@ write_setup_py(
     name='py-timeexecution',
     version=pep440_version(),
     description="Python project",
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     author="Niels Lensink",
     author_email='niels@elements.nl',
     url='https://github.com/kpn-digital/py-timeexecution',

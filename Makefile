@@ -26,6 +26,7 @@ pyclean:
 
 docsclean:
 	@rm -fr docs/_build/
+	@rm -fr docs/api/
 
 clean: pyclean docsclean
 	@rm -rf venv
@@ -48,7 +49,7 @@ lint: venv
 isort: venv
 	@$(TOX) -e isort-fix
 
-docs: venv
+docs: venv docsclean
 	@$(TOX) -e docs
 
 docker:
