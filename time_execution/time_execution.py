@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+"""
+Time Execution decorator
+"""
 import functools
 import socket
 import sys
@@ -6,7 +8,19 @@ import time
 
 
 class Settings(object):
+    """
+    Settings class that will be used by the time_execution decorator
+
+    Attributes:
+        backends (list): List of backends
+        hooks (list): List of hooks
+    """
     def __init__(self, backends=None, hooks=[]):
+        """
+        Args:
+            backends (Optional[list]): List of backends
+            hooks (Optional[list]): List of hooks
+        """
         self.backends = backends or []
         self.hooks = hooks or []
 
@@ -15,6 +29,14 @@ settings = Settings()
 
 
 def configure(**kwargs):
+    """
+    Configure the time_executions package with a new settings object.
+
+    Args:
+        backends (Optional[list]): List of backends
+        hooks (Optional[list]): List of hooks
+
+    """
     global settings
     settings = Settings(**kwargs)
 
@@ -27,7 +49,7 @@ def write_metric(name, **metric):
         backend.write(name, **metric)
 
 
-def get_qualified_name(func):
+def _get_qualified_name(func):
     """
     For python 3 we should use __qualname__ but its not available in python 2
     so in order to be consistent until we upgrade we keep of basic
@@ -43,7 +65,7 @@ def get_qualified_name(func):
     return '.'.join(filter(None, path))
 
 
-def apply_hooks(**kwargs):
+def _apply_hooks(**kwargs):
     metadata = dict()
     for hook in settings.hooks:
         hook_result = hook(**kwargs)
@@ -55,7 +77,7 @@ def apply_hooks(**kwargs):
 class time_execution(object):
     def __init__(self, func, *args, **kwargs):
         self.func = func
-        self.fqn = get_qualified_name(self.func)
+        self.fqn = _get_qualified_name(self.func)
         functools.update_wrapper(self, func)
 
     def __get__(self, obj, type=None):
@@ -73,7 +95,7 @@ class time_execution(object):
         finally:
 
             duration = round(time.time() - start_time, 3) * 1000
-            fqn = get_qualified_name(self.func)
+            fqn = _get_qualified_name(self.func)
 
             metric = dict(
                 name=fqn,
@@ -83,7 +105,7 @@ class time_execution(object):
 
             # Apply the registered hooks, and collect the metadata they might
             # return to be stored with the metrics
-            metadata = apply_hooks(
+            metadata = _apply_hooks(
                 response=response,
                 exception=exception,
                 metric=metric
