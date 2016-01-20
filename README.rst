@@ -14,9 +14,6 @@ Time Execution
     :target: http://py-timeexecution.readthedocs.org/en/latest/?badge=latest
 
 
-This package is
-
-
 Features
 --------
 
