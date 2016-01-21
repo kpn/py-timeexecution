@@ -41,7 +41,7 @@ To use this package you decorate the functions you want to time its execution.
 Every wrapped function will create a metric consisting of 3 default values:
 
 - `name` - The name of the series the metric will be stored in
-- `duration` - The time it took in ms for the wrapped function to complete
+- `value` - The time it took in ms for the wrapped function to complete
 - `hostname` - The hostname of the machine the code is running on
 
 See the following example
@@ -75,7 +75,7 @@ This will result in an entry in the influxdb
             "columns": [
                 "time",
                 "sequence_number",
-                "duration",
+                "value",
                 "hostname",
             ],
             "points": [
