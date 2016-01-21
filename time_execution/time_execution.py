@@ -6,6 +6,8 @@ import socket
 import sys
 import time
 
+SHORT_HOSTNAME = socket.gethostname()
+
 
 class Settings(object):
     """
@@ -15,7 +17,8 @@ class Settings(object):
         backends (list): List of backends
         hooks (list): List of hooks
     """
-    def __init__(self, backends=None, hooks=[]):
+
+    def __init__(self, backends=None, hooks=None, duration_field='value'):
         """
         Args:
             backends (Optional[list]): List of backends
@@ -23,6 +26,7 @@ class Settings(object):
         """
         self.backends = backends or []
         self.hooks = hooks or []
+        self.duration_field = duration_field
 
 
 settings = Settings()
@@ -39,9 +43,6 @@ def configure(**kwargs):
     """
     global settings
     settings = Settings(**kwargs)
-
-
-SHORT_HOSTNAME = socket.gethostname()
 
 
 def write_metric(name, **metric):
@@ -97,11 +98,11 @@ class time_execution(object):
             duration = round(time.time() - start_time, 3) * 1000
             fqn = _get_qualified_name(self.func)
 
-            metric = dict(
-                name=fqn,
-                duration=duration,
-                hostname=SHORT_HOSTNAME
-            )
+            metric = {
+                'name': fqn,
+                settings.duration_field: duration,
+                'hostname': SHORT_HOSTNAME
+            }
 
             # Apply the registered hooks, and collect the metadata they might
             # return to be stored with the metrics

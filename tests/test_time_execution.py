@@ -1,9 +1,13 @@
-import os
 import unittest
 
 from influxdb.influxdb08.client import InfluxDBClientError
 from time_execution import configure, time_execution
 from time_execution.backends.influxdb import InfluxBackend
+
+
+@time_execution
+def go(*args, **kwargs):
+    return True
 
 
 @time_execution
@@ -14,7 +18,7 @@ def fqn_test():
 @time_execution
 class Dummy(object):
     @time_execution
-    def go(self):
+    def go(self, *args, **kwargs):
         pass
 
 
@@ -24,7 +28,7 @@ class TestTimeExecution(unittest.TestCase):
 
         self.database = 'unittest'
         self.backend = InfluxBackend(
-            host=os.environ.get('INFLUX_PORT_4444_UDP_ADDR', 'localhost'),
+            host='influx',
             database=self.database,
             use_udp=False
         )
@@ -55,23 +59,33 @@ class TestTimeExecution(unittest.TestCase):
 
         count = 4
 
-        @time_execution
-        def go():
-            return True
-
         for i in range(count):
             go()
 
         metrics = list(self._query_influx(go.fqn))
         self.assertEqual(len(metrics), count)
 
-    def test_time_execution_hook(self):
+        for metric in metrics:
+            self.assertTrue('value' in metric)
 
-        @time_execution
-        def go():
-            return True
+    def test_duration_field(self):
+
+        configure(backends=[self.backend], duration_field='my_duration')
 
         go()
+
+        for metric in self._query_influx(go.fqn):
+            self.assertTrue('my_duration' in metric)
+
+    def test_with_arguments(self):
+        go('hello', world='world')
+        Dummy().go('hello', world='world')
+
+        metrics = list(self._query_influx(go.fqn))
+        self.assertEqual(len(metrics), 1)
+
+        metrics = list(self._query_influx(Dummy().go.fqn))
+        self.assertEqual(len(metrics), 1)
 
     def test_hook(self):
 
@@ -85,10 +99,6 @@ class TestTimeExecution(unittest.TestCase):
             return dict(test_key='test value')
 
         configure(backends=[self.backend], hooks=[test_args, test_metadata])
-
-        @time_execution
-        def go():
-            return True
 
         go()
 
