@@ -109,7 +109,9 @@ class time_execution(object):
             metadata = _apply_hooks(
                 response=response,
                 exception=exception,
-                metric=metric
+                metric=metric,
+                func_args=args,
+                func_kwargs=kwargs
             )
 
             metric.update(metadata)
