@@ -125,3 +125,33 @@ class TestTimeExecution(unittest.TestCase):
 
         for metric in self._query_influx(go.fqn):
             self.assertEqual(metric['exception_message'], 'test exception')
+
+    def test_time_execution_with_func_args(self):
+        param = 'foo'
+
+        def hook(response, exception, metric, func_args, func_kwargs):
+            self.assertEqual(func_args[0], param)
+            return metric
+
+        configure(backends=[self.backend], hooks=[hook])
+
+        @time_execution
+        def go(param1):
+            return '200 OK'
+
+        go(param)
+
+    def test_time_execution_with_func_kwargs(self):
+        param = 'foo'
+
+        def hook(response, exception, metric, func_args, func_kwargs):
+            self.assertEqual(func_kwargs['param1'], param)
+            return metric
+
+        configure(backends=[self.backend], hooks=[hook])
+
+        @time_execution
+        def go(param1):
+            return '200 OK'
+
+        go(param1=param)
