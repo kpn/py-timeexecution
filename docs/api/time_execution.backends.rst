@@ -14,6 +14,14 @@ time_execution.backends.base module
     :undoc-members:
     :show-inheritance:
 
+time_execution.backends.elasticsearch module
+--------------------------------------------
+
+.. automodule:: time_execution.backends.elasticsearch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 time_execution.backends.influxdb module
 ---------------------------------------
 

@@ -13,9 +13,9 @@ TOX=$(shell "$(CMD_FROM_VENV)" "tox")
 PYTHON=$(shell "$(CMD_FROM_VENV)" "python")
 TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
 
-.PHONY: clean docsclean pyclean test lint isort docs docker setup.py
+.PHONY: clean docsclean pyclean test lint isort docs docker setup.py requirements
 
-tox: clean venv
+tox: clean requirements
 	$(TOX)
 
 pyclean:
@@ -29,39 +29,43 @@ docsclean:
 
 clean: pyclean docsclean
 	@rm -rf venv
+	@rm -rf .tox
 
 venv:
 	@virtualenv -p python2.7 venv
 	@$(PIP) install -U "pip>=7.0" -q
+
+requirements: venv
+	@$(PIP) install -U "pip>=7.0" -q
 	@$(PIP) install -r $(DEPS)
 
-test: venv pyclean
+test: requirements pyclean
 	$(TOX) -e $(TOX_PY_LIST)
 
-test/%: venv pyclean
+test/%: requirements pyclean
 	$(TOX) -e $(TOX_PY_LIST) -- $*
 
-lint: venv
+lint: requirements
 	@$(TOX) -e lint
 	@$(TOX) -e isort-check
 
-isort: venv
+isort: requirements
 	@$(TOX) -e isort-fix
 
-docs: venv docsclean
+docs: requirements docsclean
 	@$(TOX) -e docs
 
 docker:
-	$(DOCKER_COMPOSE) run --rm app bash
+	$(DOCKER_COMPOSE) run --rm --service-ports app bash
 
 docker/%:
-	$(DOCKER_COMPOSE) run --rm app make $*
+	$(DOCKER_COMPOSE) run --rm --service-ports app make $*
 
-setup.py: venv
-	$(PYTHON) setup_gen.py
-	$(PYTHON) setup.py check --restructuredtext
+setup.py: requirements
+	@$(PYTHON) setup_gen.py
+	@$(PYTHON) setup.py check --restructuredtext
 
 publish: setup.py
-	$(PYTHON) setup.py sdist upload
+	@$(PYTHON) setup.py sdist upload
 
-build: clean venv tox setup.py
+build: clean requirements tox setup.py

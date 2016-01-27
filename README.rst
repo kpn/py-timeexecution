@@ -14,6 +14,10 @@ Time Execution
     :target: http://py-timeexecution.readthedocs.org/en/latest/?badge=latest
 
 
+This package is designed to record metrics of the application into a backend.
+With the help of grafana_ you can easily create dashboards with them
+
+
 Features
 --------
 
@@ -25,6 +29,7 @@ Backends
 --------
 
 - InfluxDB 0.8
+- Elasticsearch 2.1
 
 
 Installation
@@ -50,12 +55,14 @@ See the following example
 
     from time_execution import configure, time_execution
     from time_execution.backends.influxdb import InfluxBackend
+    from time_execution.backends.elasticsearch import ElasticsearchBackend
 
     # Setup the desired backend
-    influx = InfluxBackend(host='localhost', database='metrics', use_udp=False)
+    influx = InfluxBackend(host='influx', database='metrics', use_udp=False)
+    elasticsearch = ElasticsearchBackend('elasticsearch', index='metrics')
 
     # Configure the time_execution decorator
-    configure(backends=[influx])
+    configure(backends=[influx, elasticsearch])
 
     # Wrap the methods where u want the metrics
     @time_execution
@@ -85,6 +92,28 @@ This will result in an entry in the influxdb
                     312,
                     "machine.name",
                 ]
+            ]
+        }
+    ]
+
+And the following in Elasticsearch
+
+.. code-block:: json
+
+    [
+        {
+            "_index": "metrics-2016.01.28",
+            "_type": "metric",
+            "_id": "AVKIp9DpnPWamvqEzFB3",
+            "_score": null,
+            "_source": {
+                "timestamp": "2016-01-28T14:34:05.416968",
+                "hostname": "dfaa4928109f",
+                "name": "__main__.hello",
+                "value": 312
+            },
+            "sort": [
+                1453991645416
             ]
         }
     ]
@@ -125,7 +154,7 @@ See the following example how to setup hooks.
             )
 
     # Configure the time_execution decorator, but now with hooks
-    configure(backends=[influx], hooks=[my_hook])
+    configure(backends=[backend], hooks=[my_hook])
 
 Manually sending metrics
 ------------------------
@@ -141,3 +170,44 @@ See the following example.
     write_metric('cpu.load.1m', value=loadavg[0])
     write_metric('cpu.load.5m', value=loadavg[1])
     write_metric('cpu.load.15m', value=loadavg[2])
+
+.. _grafana: http://grafana.org/
+
+
+Custom Backend
+--------------
+
+Writing a custom backend is very simple, all you need to do is create a class
+with a `write` method. It is not required to extend `BaseMetricsBackend`
+but in order to easily upgrade I recommend u do.
+
+.. code-block:: python
+
+    from time_execution.backends.base import BaseMetricsBackend
+
+
+    class MetricsPrinter(BaseMetricsBackend):
+        def write(self, name, **data):
+            print(name, data)
+
+
+Contribute
+----------
+
+You have something to contribute ? Great !
+A few things that may come in handy.
+
+Testing in this project is done via docker. There is a docker-compose to easily
+get all the required containers up and running.
+
+There is a Makefile with a few targets that we use often:
+
+- `make test`
+- `make isort`
+- `make lint`
+- `make build`
+- `make setup.py`
+
+All of these make targets can be prefixed by `docker/`. This will execute
+the target inside the docker container instead of on your local machine.
+For example `make docker/build`.
