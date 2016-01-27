@@ -105,6 +105,8 @@ A hook will always get 3 arguments:
 - `response` - The returned value of the wrapped function
 - `exception` - The raised exception of the wrapped function
 - `metric` - A dict containing the data to be send to the backend
+- `func_args` - Original args received by the wrapped function.
+- `func_kwargs` - Original kwargs received by the wrapped function.
 
 From within a hook you can change the `name` if you want the metrics to be split
 into multiple series.
@@ -114,7 +116,7 @@ See the following example how to setup hooks.
 .. code-block:: python
 
     # Now lets create a hook
-    def my_hook(response, exception, metric):
+    def my_hook(response, exception, metric, func_args, func_kwargs):
         status_code = getattr(response, 'status_code', None)
         if status_code:
             return dict(
