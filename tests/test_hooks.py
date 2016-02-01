@@ -2,6 +2,16 @@ import unittest
 
 from tests.conftest import go
 from time_execution import configure, time_execution
+from time_execution.backends.base import BaseMetricsBackend
+
+
+class AssertBackend(BaseMetricsBackend):
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    def write(self, name, **data):
+        return self.callback(name, **data)
 
 
 class TestTimeExecution(unittest.TestCase):
@@ -17,24 +27,38 @@ class TestTimeExecution(unittest.TestCase):
         def test_metadata(*args, **kwargs):
             return dict(test_key='test value')
 
-        configure(hooks=[test_args, test_metadata])
+        def asserts(name, **data):
+            self.assertEqual(data['test_key'], 'test value')
+
+        configure(
+            backends=[AssertBackend(asserts)],
+            hooks=[test_args, test_metadata]
+        )
 
         go()
 
     def test_hook_exception(self):
 
+        message = 'exception message'
+
         def exception_hook(exception, **kwargs):
-            self.assertTrue(exception)
+            self.assertIsInstance(exception, TimeExecutionException)
             return dict(exception_message=str(exception))
 
-        configure(hooks=[exception_hook])
+        def asserts(name, **data):
+            self.assertEqual(data['exception_message'], message)
+
+        configure(
+            backends=[AssertBackend(asserts)],
+            hooks=[exception_hook]
+        )
 
         class TimeExecutionException(Exception):
-            message = 'default'
+            pass
 
         @time_execution
         def go():
-            raise TimeExecutionException('test exception')
+            raise TimeExecutionException(message)
 
         with self.assertRaises(TimeExecutionException):
             go()
@@ -44,7 +68,6 @@ class TestTimeExecution(unittest.TestCase):
 
         def hook(response, exception, metric, func_args, func_kwargs):
             self.assertEqual(func_args[0], param)
-            return metric
 
         configure(hooks=[hook])
 
@@ -59,7 +82,6 @@ class TestTimeExecution(unittest.TestCase):
 
         def hook(response, exception, metric, func_args, func_kwargs):
             self.assertEqual(func_kwargs['param1'], param)
-            return metric
 
         configure(hooks=[hook])
 

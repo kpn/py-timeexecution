@@ -34,25 +34,23 @@ clean: pyclean docsclean
 venv:
 	@virtualenv -p python2.7 venv
 	@$(PIP) install -U "pip>=7.0" -q
-
-requirements: venv
 	@$(PIP) install -U "pip>=7.0" -q
 	@$(PIP) install -r $(DEPS)
 
-test: requirements pyclean
+test: venv pyclean
 	$(TOX) -e $(TOX_PY_LIST)
 
-test/%: requirements pyclean
+test/%: venv pyclean
 	$(TOX) -e $(TOX_PY_LIST) -- $*
 
-lint: requirements
+lint: venv
 	@$(TOX) -e lint
 	@$(TOX) -e isort-check
 
-isort: requirements
+isort: venv
 	@$(TOX) -e isort-fix
 
-docs: requirements docsclean
+docs: venv docsclean
 	@$(TOX) -e docs
 
 docker:
@@ -61,11 +59,11 @@ docker:
 docker/%:
 	$(DOCKER_COMPOSE) run --rm --service-ports app make $*
 
-setup.py: requirements
+setup.py: venv
 	@$(PYTHON) setup_gen.py
 	@$(PYTHON) setup.py check --restructuredtext
 
 publish: setup.py
 	@$(PYTHON) setup.py sdist upload
 
-build: clean requirements tox setup.py
+build: clean venv tox setup.py
