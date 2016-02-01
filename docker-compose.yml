@@ -7,8 +7,16 @@ influx:
   environment:
     - PRE_CREATE_DB=metrics
     - UDP_DB=metrics
-#  volumes:
-#    - data:/data
+elasticsearch:
+  image: elasticsearch:2.1
+  ports:
+    - "9200:9200"
+kibana:
+  image: kibana
+  ports:
+    - "5601:5601"
+  links:
+    - elasticsearch
 grafana:
   image: grafana/grafana
   ports:
@@ -17,11 +25,17 @@ grafana:
     - GF_SECURITY_ADMIN_PASSWORD=admin
   links:
     - influx
+    - elasticsearch
 influx_wait:
   image: kpndigital/tox
   links:
     - influx
   command: sh -c "while ! nc -w1 -z influx 8086; do sleep 1; done"
+elasticsearch_wait:
+  image: kpndigital/tox
+  links:
+    - elasticsearch
+  command: sh -c "while ! nc -w1 -z elasticsearch 9200; do sleep 1; done"
 app:
   build: .
   volumes:
@@ -30,3 +44,5 @@ app:
   links:
     - influx_wait
     - influx
+    - elasticsearch_wait
+    - elasticsearch

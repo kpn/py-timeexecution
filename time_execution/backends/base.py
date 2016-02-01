@@ -1,7 +1,8 @@
 """
-Base metrics
+Base metrics backend
 """
 
 
 class BaseMetricsBackend(object):
-    pass
+    def write(self, name, **data):
+        raise NotImplementedError

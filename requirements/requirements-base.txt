@@ -1,1 +1,2 @@
-influxdb
+influxdb>=2.11
+elasticsearch>=2.2.0

@@ -1,11 +1,7 @@
 from __future__ import absolute_import
 
-import socket
-
 from influxdb.influxdb08 import InfluxDBClient
 from time_execution.backends.base import BaseMetricsBackend
-
-SHORT_HOSTNAME = socket.gethostname()
 
 
 class InfluxBackend(BaseMetricsBackend):
