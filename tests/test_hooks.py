@@ -1,12 +1,11 @@
 import unittest
 
 from tests.conftest import go
-from time_execution import configure, time_execution
+from time_execution import settings, time_execution
 from time_execution.backends.base import BaseMetricsBackend
 
 
 class AssertBackend(BaseMetricsBackend):
-
     def __init__(self, callback):
         self.callback = callback
 
@@ -15,9 +14,7 @@ class AssertBackend(BaseMetricsBackend):
 
 
 class TestTimeExecution(unittest.TestCase):
-
     def test_hook(self):
-
         def test_args(**kwargs):
             self.assertIn('response', kwargs)
             self.assertIn('exception', kwargs)
@@ -30,16 +27,15 @@ class TestTimeExecution(unittest.TestCase):
         def asserts(name, **data):
             self.assertEqual(data['test_key'], 'test value')
 
-        configure(
-            backends=[AssertBackend(asserts)],
-            hooks=[test_args, test_metadata]
-        )
-
-        go()
+        with settings(backends=[AssertBackend(asserts)],
+                      hooks=[test_args, test_metadata]):
+            go()
 
     def test_hook_exception(self):
-
         message = 'exception message'
+
+        class TimeExecutionException(Exception):
+            pass
 
         def exception_hook(exception, **kwargs):
             self.assertIsInstance(exception, TimeExecutionException)
@@ -48,45 +44,37 @@ class TestTimeExecution(unittest.TestCase):
         def asserts(name, **data):
             self.assertEqual(data['exception_message'], message)
 
-        configure(
-            backends=[AssertBackend(asserts)],
-            hooks=[exception_hook]
-        )
-
-        class TimeExecutionException(Exception):
-            pass
-
         @time_execution
         def go():
             raise TimeExecutionException(message)
 
-        with self.assertRaises(TimeExecutionException):
-            go()
+        with settings(backends=[AssertBackend(asserts)],
+                      hooks=[exception_hook]):
+            with self.assertRaises(TimeExecutionException):
+                go()
 
     def test_hook_func_args(self):
         param = 'foo'
 
-        def hook(response, exception, metric, func_args, func_kwargs):
-            self.assertEqual(func_args[0], param)
-
-        configure(hooks=[hook])
-
         @time_execution
         def go(param1):
             return '200 OK'
 
-        go(param)
+        def hook(response, exception, metric, func_args, func_kwargs):
+            self.assertEqual(func_args[0], param)
+
+        with settings(hooks=[hook]):
+            go(param)
 
     def test_hook_func_kwargs(self):
         param = 'foo'
 
-        def hook(response, exception, metric, func_args, func_kwargs):
-            self.assertEqual(func_kwargs['param1'], param)
-
-        configure(hooks=[hook])
-
         @time_execution
         def go(param1):
             return '200 OK'
 
-        go(param1=param)
+        def hook(response, exception, metric, func_args, func_kwargs):
+            self.assertEqual(func_kwargs['param1'], param)
+
+        with settings(hooks=[hook]):
+            go(param1=param)

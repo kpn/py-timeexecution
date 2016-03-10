@@ -57,7 +57,6 @@ class ElasticsearchBackend(BaseMetricsBackend):
                             },
                             "timestamp": {
                                 "type": "date",
-                                # "format": "dateOptionalTime",
                                 "index": "not_analyzed"
                             },
                             "hostname": {

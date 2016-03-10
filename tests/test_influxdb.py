@@ -1,7 +1,7 @@
 from influxdb.influxdb08.client import InfluxDBClientError
 from tests.conftest import Dummy, go
 from tests.test_base_backend import TestBaseBackend
-from time_execution import configure
+from time_execution import settings
 from time_execution.backends.influxdb import InfluxBackend
 
 
@@ -22,7 +22,7 @@ class TestTimeExecution(TestBaseBackend):
             # Something blew up so ignore it
             pass
 
-        configure(backends=[self.backend])
+        settings.configure(backends=[self.backend])
 
     def tearDown(self):
         self.backend.client.delete_database(self.database)
@@ -45,11 +45,12 @@ class TestTimeExecution(TestBaseBackend):
             self.assertTrue('value' in metric)
 
     def test_duration_field(self):
-        configure(backends=[self.backend], duration_field='my_duration')
-        go()
 
-        for metric in self._query_backend(go.fqn):
-            self.assertTrue('my_duration' in metric)
+        with settings(duration_field='my_duration'):
+            go()
+
+            for metric in self._query_backend(go.fqn):
+                self.assertTrue('my_duration' in metric)
 
     def test_with_arguments(self):
         go('hello', world='world')
@@ -72,9 +73,9 @@ class TestTimeExecution(TestBaseBackend):
         def test_metadata(*args, **kwargs):
             return dict(test_key='test value')
 
-        configure(backends=[self.backend], hooks=[test_args, test_metadata])
+        with settings(hooks=[test_args, test_metadata]):
 
-        go()
+            go()
 
-        for metric in self._query_backend(go.fqn):
-            self.assertEqual(metric['test_key'], 'test value')
+            for metric in self._query_backend(go.fqn):
+                self.assertEqual(metric['test_key'], 'test value')
