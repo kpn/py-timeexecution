@@ -1,6 +1,6 @@
 from tests.conftest import Dummy, go
 from tests.test_base_backend import TestBaseBackend
-from time_execution import configure
+from time_execution import settings
 from time_execution.backends.elasticsearch import ElasticsearchBackend
 
 
@@ -12,9 +12,8 @@ class TestTimeExecution(TestBaseBackend):
             'elasticsearch',
             index='unittest',
         )
-
+        settings.configure(backends=[self.backend])
         self._clear()
-        configure(backends=[self.backend])
 
     def tearDown(self):
         self._clear()
@@ -50,13 +49,10 @@ class TestTimeExecution(TestBaseBackend):
             self.assertTrue('value' in metric['_source'])
 
     def test_duration_field(self):
-
-        configure(backends=[self.backend], duration_field='my_duration')
-
-        go()
-
-        for metric in self._query_backend(go.fqn)['hits']['hits']:
-            self.assertTrue('my_duration' in metric['_source'])
+        with settings(duration_field='my_duration'):
+            go()
+            for metric in self._query_backend(go.fqn)['hits']['hits']:
+                self.assertTrue('my_duration' in metric['_source'])
 
     def test_with_arguments(self):
         go('hello', world='world')
@@ -79,9 +75,7 @@ class TestTimeExecution(TestBaseBackend):
         def test_metadata(*args, **kwargs):
             return dict(test_key='test value')
 
-        configure(backends=[self.backend], hooks=[test_args, test_metadata])
-
-        go()
-
-        for metric in self._query_backend(go.fqn)['hits']['hits']:
-            self.assertEqual(metric['_source']['test_key'], 'test value')
+        with settings(hooks=[test_args, test_metadata]):
+            go()
+            for metric in self._query_backend(go.fqn)['hits']['hits']:
+                self.assertEqual(metric['_source']['test_key'], 'test value')

@@ -6,43 +6,16 @@ import socket
 import sys
 import time
 
+from pkgsettings import Settings
+
 SHORT_HOSTNAME = socket.gethostname()
 
-
-class Settings(object):
-    """
-    Settings class that will be used by the time_execution decorator
-
-    Attributes:
-        backends (list): List of backends
-        hooks (list): List of hooks
-    """
-
-    def __init__(self, backends=None, hooks=None, duration_field='value'):
-        """
-        Args:
-            backends (Optional[list]): List of backends
-            hooks (Optional[list]): List of hooks
-        """
-        self.backends = backends or []
-        self.hooks = hooks or []
-        self.duration_field = duration_field
-
-
 settings = Settings()
-
-
-def configure(**kwargs):
-    """
-    Configure the time_executions package with a new settings object.
-
-    Args:
-        backends (Optional[list]): List of backends
-        hooks (Optional[list]): List of hooks
-
-    """
-    global settings
-    settings = Settings(**kwargs)
+settings.configure(
+    backends=[],
+    hooks=[],
+    duration_field='value'
+)
 
 
 def write_metric(name, **metric):
