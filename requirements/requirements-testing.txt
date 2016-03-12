@@ -1,7 +1,7 @@
 tox
 isort
 flake8
-py-pkgversion
+pkgversion
 
 # PyTest for running the tests.
 pytest
