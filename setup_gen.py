@@ -10,7 +10,7 @@ write_setup_py(
     long_description=open('README.rst').read(),
     author="Niels Lensink",
     author_email='niels@elements.nl',
-    url='https://github.com/kpn-digital/timeexecution',
+    url='https://github.com/kpn-digital/py-timeexecution',
     install_requires=list_requirements('requirements/requirements-base.txt'),
     packages=find_packages(exclude=['tests*']),
     tests_require=['tox'],
