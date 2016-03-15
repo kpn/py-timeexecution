@@ -1,17 +1,17 @@
 Time Execution
 ==============
 
-.. image:: https://secure.travis-ci.org/kpn-digital/timeexecution.svg?branch=master
-    :target:  http://travis-ci.org/kpn-digital/timeexecution?branch=master
+.. image:: https://secure.travis-ci.org/kpn-digital/py-timeexecution.svg?branch=master
+    :target:  http://travis-ci.org/kpn-digital/py-timeexecution?branch=master
 
-.. image:: https://img.shields.io/codecov/c/github/kpn-digital/timeexecution/master.svg
-    :target: http://codecov.io/github/kpn-digital/timeexecution?branch=master
+.. image:: https://img.shields.io/codecov/c/github/kpn-digital/py-timeexecution/master.svg
+    :target: http://codecov.io/github/kpn-digital/py-timeexecution?branch=master
 
 .. image:: https://img.shields.io/pypi/v/timeexecution.svg
     :target: https://pypi.python.org/pypi/timeexecution
 
-.. image:: https://readthedocs.org/projects/timeexecution/badge/?version=latest
-    :target: http://timeexecution.readthedocs.org/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/py-timeexecution/badge/?version=latest
+    :target: http://py-timeexecution.readthedocs.org/en/latest/?badge=latest
 
 
 This package is designed to record metrics of the application into a backend.
