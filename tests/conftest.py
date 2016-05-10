@@ -7,11 +7,6 @@ def go(*args, **kwargs):
 
 
 @time_execution
-def fqn_test():
-    pass
-
-
-@time_execution
 class Dummy(object):
     @time_execution
     def go(self, *args, **kwargs):

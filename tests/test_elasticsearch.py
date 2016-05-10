@@ -1,3 +1,4 @@
+from fqn_decorators import get_fqn
 from tests.conftest import Dummy, go
 from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
@@ -58,10 +59,10 @@ class TestTimeExecution(TestBaseBackend):
         go('hello', world='world')
         Dummy().go('hello', world='world')
 
-        metrics = self._query_backend(go.fqn)
+        metrics = self._query_backend(get_fqn(go))
         self.assertEqual(metrics['hits']['total'], 1)
 
-        metrics = self._query_backend(Dummy().go.fqn)
+        metrics = self._query_backend(get_fqn(Dummy().go))
         self.assertEqual(metrics['hits']['total'], 1)
 
     def test_hook(self):
