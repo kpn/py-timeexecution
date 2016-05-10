@@ -96,10 +96,9 @@ class time_execution(object):
         finally:
 
             duration = round(time.time() - start_time, 3) * 1000
-            fqn = _get_qualified_name(self.func)
 
             metric = {
-                'name': fqn,
+                'name': self.fqn,
                 settings.duration_field: duration,
                 'hostname': SHORT_HOSTNAME
             }
