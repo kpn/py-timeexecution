@@ -10,3 +10,4 @@ pytest-cov
 # docs
 sphinx
 sphinxcontrib-plantuml
+sphinx_rtd_theme
