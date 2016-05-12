@@ -53,7 +53,7 @@ See the following example
 
 .. code-block:: python
 
-    from time_execution import configure, time_execution
+    from time_execution import settings, time_execution
     from time_execution.backends.influxdb import InfluxBackend
     from time_execution.backends.elasticsearch import ElasticsearchBackend
 
@@ -62,7 +62,7 @@ See the following example
     elasticsearch = ElasticsearchBackend('elasticsearch', index='metrics')
 
     # Configure the time_execution decorator
-    configure(backends=[influx, elasticsearch])
+    settings.configure(backends=[influx, elasticsearch])
 
     # Wrap the methods where u want the metrics
     @time_execution
@@ -154,7 +154,7 @@ See the following example how to setup hooks.
             )
 
     # Configure the time_execution decorator, but now with hooks
-    configure(backends=[backend], hooks=[my_hook])
+    settings.configure(backends=[backend], hooks=[my_hook])
 
 Manually sending metrics
 ------------------------

@@ -1,11 +1,10 @@
 """
 Time Execution decorator
 """
-import functools
 import socket
-import sys
 import time
 
+from fqn_decorators import Decorator
 from pkgsettings import Settings
 
 SHORT_HOSTNAME = socket.gethostname()
@@ -23,22 +22,6 @@ def write_metric(name, **metric):
         backend.write(name, **metric)
 
 
-def _get_qualified_name(func):
-    """
-    For python 3 we should use __qualname__ but its not available in python 2
-    so in order to be consistent until we upgrade we keep of basic
-    """
-    path = [func.__module__]
-    if sys.version_info[0] > 2:
-        qualname = getattr(func, '__qualname__', None)
-        path.append(qualname.replace('<locals>.', ''))
-    else:
-        im_class = getattr(func, 'im_class', None)
-        path.append(getattr(im_class, '__name__', None))
-        path.append(func.__name__)
-    return '.'.join(filter(None, path))
-
-
 def _apply_hooks(**kwargs):
     metadata = dict()
     for hook in settings.hooks:
@@ -48,45 +31,38 @@ def _apply_hooks(**kwargs):
     return metadata
 
 
-class time_execution(object):
-    def __init__(self, func, *args, **kwargs):
-        self.func = func
-        self.fqn = _get_qualified_name(self.func)
-        functools.update_wrapper(self, func)
+class time_execution(Decorator):
 
-    def __get__(self, obj, type=None):
-        return self.__class__(self.func.__get__(obj, type))
+    def __init__(self, func=None, **params):
+        self.start_time = None
+        super(time_execution, self).__init__(func, **params)
 
-    def __call__(self, *args, **kwargs):
-        start_time = time.time()
-        response = None
-        exception = None
-        try:
-            response = self.func(*args, **kwargs)
-        except Exception as e:
-            exception = e
-            raise
-        finally:
+    def before(self):
+        self.start_time = time.time()
 
-            duration = round(time.time() - start_time, 3) * 1000
+    def after(self):
+        duration = round(time.time() - self.start_time, 3) * 1000
 
-            metric = {
-                'name': self.fqn,
-                settings.duration_field: duration,
-                'hostname': SHORT_HOSTNAME
-            }
+        metric = {
+            'name': self.fqn,
+            settings.duration_field: duration,
+            'hostname': SHORT_HOSTNAME
+        }
 
-            # Apply the registered hooks, and collect the metadata they might
-            # return to be stored with the metrics
-            metadata = _apply_hooks(
-                response=response,
-                exception=exception,
-                metric=metric,
-                func_args=args,
-                func_kwargs=kwargs
-            )
+        # Apply the registered hooks, and collect the metadata they might
+        # return to be stored with the metrics
+        metadata = _apply_hooks(
+            response=self.result,
+            exception=self.get_exception(),
+            metric=metric,
+            func_args=self.args,
+            func_kwargs=self.kwargs
+        )
 
-            metric.update(metadata)
-            write_metric(**metric)
+        metric.update(metadata)
+        write_metric(**metric)
 
-        return response
+    def get_exception(self):
+        """Retrieve the exception"""
+        if self.exc_info:
+            return self.exc_info[0](self.exc_info[1])

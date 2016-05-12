@@ -1,3 +1,4 @@
+from fqn_decorators import get_fqn
 from influxdb.influxdb08.client import InfluxDBClientError
 from tests.conftest import Dummy, go
 from tests.test_base_backend import TestBaseBackend
@@ -56,10 +57,10 @@ class TestTimeExecution(TestBaseBackend):
         go('hello', world='world')
         Dummy().go('hello', world='world')
 
-        metrics = list(self._query_backend(go.fqn))
+        metrics = list(self._query_backend(get_fqn(go)))
         self.assertEqual(len(metrics), 1)
 
-        metrics = list(self._query_backend(Dummy().go.fqn))
+        metrics = list(self._query_backend(get_fqn(Dummy().go)))
         self.assertEqual(len(metrics), 1)
 
     def test_hook(self):
