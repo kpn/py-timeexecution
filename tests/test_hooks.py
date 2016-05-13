@@ -53,6 +53,29 @@ class TestTimeExecution(unittest.TestCase):
             with self.assertRaises(TimeExecutionException):
                 go()
 
+    def test_hook_exception_args(self):
+        message = 'exception message'
+
+        class TimeExecutionException(Exception):
+            def __init__(self, msg, required):
+                super(TimeExecutionException, self).__init__(msg)
+
+        def exception_hook(exception, **kwargs):
+            self.assertIsInstance(exception, TimeExecutionException)
+            return dict(exception_message=str(exception))
+
+        def asserts(name, **data):
+            self.assertEqual(data['exception_message'], message)
+
+        @time_execution
+        def go():
+            raise TimeExecutionException(message, True)
+
+        with settings(backends=[AssertBackend(asserts)],
+                      hooks=[exception_hook]):
+            with self.assertRaises(TimeExecutionException):
+                go()
+
     def test_hook_func_args(self):
         param = 'foo'
 

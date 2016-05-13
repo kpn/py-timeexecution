@@ -4,6 +4,7 @@ Time Execution decorator
 import socket
 import time
 
+import six
 from fqn_decorators import Decorator
 from pkgsettings import Settings
 
@@ -65,4 +66,7 @@ class time_execution(Decorator):
     def get_exception(self):
         """Retrieve the exception"""
         if self.exc_info:
-            return self.exc_info[0](self.exc_info[1])
+            try:
+                six.reraise(*self.exc_info)
+            except Exception as e:
+                return e
