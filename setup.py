@@ -26,5 +26,5 @@ setup(**{'author': 'Niels Lensink',
  'packages': ['time_execution', 'time_execution.backends'],
  'tests_require': ['tox'],
  'url': 'https://github.com/kpn-digital/py-timeexecution',
- 'version': '1.5.0+1.g81ed6bc',
+ 'version': '1.7.1',
  'zip_safe': False})
