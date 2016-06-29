@@ -1,1 +1,1 @@
-from .time_execution import *
+from .decorator import *
