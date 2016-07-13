@@ -3,6 +3,9 @@ isort
 flake8
 pkgversion
 
+freezegun>=0.3.7,<0.4
+mock>=2.0,<3.0
+
 # PyTest for running the tests.
 pytest
 pytest-cov
