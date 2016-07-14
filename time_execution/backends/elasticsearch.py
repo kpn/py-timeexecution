@@ -1,9 +1,13 @@
 from __future__ import absolute_import
 
+import logging
 from datetime import datetime
 
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import TransportError
 from time_execution.backends.base import BaseMetricsBackend
+
+logger = logging.getLogger(__file__)
 
 
 class ElasticsearchBackend(BaseMetricsBackend):
@@ -19,8 +23,14 @@ class ElasticsearchBackend(BaseMetricsBackend):
         self.client = Elasticsearch(hosts=hosts, *args, **kwargs)
 
         # ensure the index is created
-        self._setup_index()
-        self._setup_mapping()
+        try:
+            self._setup_index()
+        except TransportError as exc:
+            logger.error('index setup error %r', exc)
+        try:
+            self._setup_mapping()
+        except TransportError as exc:
+            logger.error('mapping setup error %r', exc)
 
     def get_index(self):
         return self.index_pattern.format(index=self.index, date=datetime.now())
@@ -89,9 +99,12 @@ class ElasticsearchBackend(BaseMetricsBackend):
         data["name"] = name
         data["timestamp"] = datetime.utcnow()
 
-        self.client.index(
-            index=self.get_index(),
-            doc_type=self.doc_type,
-            id=None,
-            body=data
-        )
+        try:
+            self.client.index(
+                index=self.get_index(),
+                doc_type=self.doc_type,
+                id=None,
+                body=data
+            )
+        except TransportError as exc:
+            logger.warning('writing metric %r failure %r', data, exc)
