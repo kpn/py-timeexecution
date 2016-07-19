@@ -123,7 +123,7 @@ Hooks
 -----
 
 `time_execution` supports hooks where you can change the metric before its
-being send to the backend.
+being sent to the backend.
 
 With a hook you can add additional and change existing fields. This can be
 useful for cases where you would like to add a column to the metric based on

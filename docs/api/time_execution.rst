@@ -10,10 +10,10 @@ time_execution
 
     time_execution.backends
 
-time_execution.time_execution module
-------------------------------------
+time_execution.decorator module
+-------------------------------
 
-.. automodule:: time_execution.time_execution
+.. automodule:: time_execution.decorator
     :members:
     :undoc-members:
     :show-inheritance:

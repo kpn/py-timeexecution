@@ -15,6 +15,7 @@ Contents:
    installation
    usage
    api
+   settings
 
 Indices and tables
 ==================
