@@ -64,6 +64,7 @@ class TestTimeExecution(TestBaseBackend):
 
         for metric in metrics['hits']['hits']:
             self.assertTrue('value' in metric['_source'])
+            self.assertFalse('origin' in metric['_source'])
 
     def test_duration_field(self):
         with settings(duration_field='my_duration'):
@@ -119,3 +120,11 @@ class TestTimeExecution(TestBaseBackend):
                 },
                 transport_error
             )
+
+    def test_with_origin(self):
+        with settings(origin='unit_test'):
+
+            go()
+
+            for metric in self._query_backend(go.fqn)['hits']['hits']:
+                self.assertEqual(metric['_source']['origin'], 'unit_test')

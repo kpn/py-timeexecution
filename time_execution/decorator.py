@@ -47,8 +47,12 @@ class time_execution(Decorator):
         metric = {
             'name': self.fqn,
             settings.duration_field: duration,
-            'hostname': SHORT_HOSTNAME
+            'hostname': SHORT_HOSTNAME,
         }
+
+        origin = getattr(settings, 'origin', None)
+        if origin:
+            metric['origin'] = origin
 
         # Apply the registered hooks, and collect the metadata they might
         # return to be stored with the metrics

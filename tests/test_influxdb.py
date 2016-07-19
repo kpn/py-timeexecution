@@ -44,6 +44,7 @@ class TestTimeExecution(TestBaseBackend):
 
         for metric in metrics:
             self.assertTrue('value' in metric)
+            self.assertFalse('origin' in metric)
 
     def test_duration_field(self):
 
@@ -80,3 +81,11 @@ class TestTimeExecution(TestBaseBackend):
 
             for metric in self._query_backend(go.fqn):
                 self.assertEqual(metric['test_key'], 'test value')
+
+    def test_with_origin(self):
+        with settings(origin='unit_test'):
+
+            go()
+
+            for metric in self._query_backend(go.fqn):
+                self.assertEqual(metric['origin'], 'unit_test')
