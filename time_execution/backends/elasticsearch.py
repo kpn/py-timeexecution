@@ -40,7 +40,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
 
     def _setup_mapping(self):
         return self.client.indices.put_template(
-            name="timeexecution",
+            name="timeexecution-{}".format(self.index),
             body={
                 "template": "{}*".format(self.index),
                 "mappings": {
