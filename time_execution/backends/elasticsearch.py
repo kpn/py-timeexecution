@@ -97,7 +97,8 @@ class ElasticsearchBackend(BaseMetricsBackend):
         """
 
         data["name"] = name
-        data["timestamp"] = datetime.utcnow()
+        if not ("timestamp" in data):
+            data["timestamp"] = datetime.utcnow()
 
         try:
             self.client.index(

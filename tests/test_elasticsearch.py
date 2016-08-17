@@ -21,6 +21,27 @@ class TestConnectionErrors(TestBaseBackend):
         mocked_logger.warning.assert_called_once()
 
 
+class ElasticTestMixin(object):
+
+    @staticmethod
+    def _clear(backend):
+        backend.client.indices.delete(backend.index, ignore=404)
+        backend.client.indices.delete("{}*".format(backend.index), ignore=404)
+
+    @staticmethod
+    def _query_backend(backend, name):
+        backend.client.indices.refresh(backend.get_index())
+        metrics = backend.client.search(
+            index=backend.get_index(),
+            body={
+                "query": {
+                    "term": {"name": name}
+                },
+            }
+        )
+        return metrics
+
+
 class TestTimeExecution(TestBaseBackend):
     def setUp(self):
         super(TestTimeExecution, self).setUp()
@@ -36,21 +57,10 @@ class TestTimeExecution(TestBaseBackend):
         self._clear()
 
     def _clear(self):
-        self.backend.client.indices.delete(self.backend.index, ignore=404)
-        self.backend.client.indices.delete("{}*".format(self.backend.index), ignore=404)
+        ElasticTestMixin._clear(self.backend)
 
     def _query_backend(self, name):
-
-        self.backend.client.indices.refresh(self.backend.get_index())
-        metrics = self.backend.client.search(
-            index=self.backend.get_index(),
-            body={
-                "query": {
-                    "term": {"name": name}
-                },
-            }
-        )
-        return metrics
+        return ElasticTestMixin._query_backend(self.backend, name)
 
     def test_time_execution(self):
 
