@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import mock
+from elasticsearch.exceptions import TransportError
 from fqn_decorators import get_fqn
 from freezegun import freeze_time
 from tests.conftest import Dummy, go
@@ -13,12 +14,33 @@ class TestConnectionErrors(TestBaseBackend):
 
     @mock.patch('time_execution.backends.elasticsearch.logger')
     def test_error_resilience(self, mocked_logger):
-        backend = ElasticsearchBackend()  # defaults to localhost, which is unavailable
+        backend = ElasticsearchBackend(hosts=['non-existant-domain'])
         # ensure index and mapping setup failures are caught and logged
         self.assertEqual(2, len(mocked_logger.error.call_args_list))
         # ensure write failure is caught and logged
         backend.write(name='test_error_resilience')
         mocked_logger.warning.assert_called_once()
+
+
+class ElasticTestMixin(object):
+
+    @staticmethod
+    def _clear(backend):
+        backend.client.indices.delete(backend.index, ignore=404)
+        backend.client.indices.delete("{}*".format(backend.index), ignore=404)
+
+    @staticmethod
+    def _query_backend(backend, name):
+        backend.client.indices.refresh(backend.get_index())
+        metrics = backend.client.search(
+            index=backend.get_index(),
+            body={
+                "query": {
+                    "term": {"name": name}
+                },
+            }
+        )
+        return metrics
 
 
 class TestTimeExecution(TestBaseBackend):
@@ -36,21 +58,10 @@ class TestTimeExecution(TestBaseBackend):
         self._clear()
 
     def _clear(self):
-        self.backend.client.indices.delete(self.backend.index, ignore=404)
-        self.backend.client.indices.delete("{}*".format(self.backend.index), ignore=404)
+        ElasticTestMixin._clear(self.backend)
 
     def _query_backend(self, name):
-
-        self.backend.client.indices.refresh(self.backend.get_index())
-        metrics = self.backend.client.search(
-            index=self.backend.get_index(),
-            body={
-                "query": {
-                    "term": {"name": name}
-                },
-            }
-        )
-        return metrics
+        return ElasticTestMixin._query_backend(self.backend, name)
 
     def test_time_execution(self):
 
@@ -100,7 +111,6 @@ class TestTimeExecution(TestBaseBackend):
 
     @mock.patch('time_execution.backends.elasticsearch.logger')
     def test_error_warning(self, mocked_logger):
-        from elasticsearch.exceptions import TransportError
 
         transport_error = TransportError('mocked error')
         es_index_error_ctx = mock.patch(
@@ -128,3 +138,43 @@ class TestTimeExecution(TestBaseBackend):
 
             for metric in self._query_backend(go.fqn)['hits']['hits']:
                 self.assertEqual(metric['_source']['origin'], 'unit_test')
+
+    def test_bulk_write(self):
+        metrics = [
+            {
+                'name': 'metric.name',
+                'value': 1,
+                'timestamp': 1,
+            },
+            {
+                'name': 'metric.name',
+                'value': 2,
+                'timestamp': 2,
+            },
+            {
+                'name': 'metric.name',
+                'value': 3,
+                'timestamp': 3,
+            }
+        ]
+        self.backend.bulk_write(metrics)
+        query_result = self._query_backend('metric.name')
+        self.assertEqual(
+            len(metrics),
+            query_result['hits']['total']
+        )
+
+    @mock.patch('time_execution.backends.elasticsearch.logger')
+    def test_bulk_write_error(self, mocked_logger):
+        transport_error = TransportError('mocked error')
+        es_index_error_ctx = mock.patch(
+            'time_execution.backends.elasticsearch.Elasticsearch.bulk',
+            side_effect=transport_error
+        )
+        metrics = [1, 2, 3]
+        with es_index_error_ctx:
+            self.backend.bulk_write(metrics)
+            mocked_logger.warning.assert_called_once_with(
+                'bulk_write metrics %r failure %r',
+                metrics,
+                transport_error)

@@ -97,7 +97,8 @@ class ElasticsearchBackend(BaseMetricsBackend):
         """
 
         data["name"] = name
-        data["timestamp"] = datetime.utcnow()
+        if not ("timestamp" in data):
+            data["timestamp"] = datetime.utcnow()
 
         try:
             self.client.index(
@@ -108,3 +109,20 @@ class ElasticsearchBackend(BaseMetricsBackend):
             )
         except TransportError as exc:
             logger.warning('writing metric %r failure %r', data, exc)
+
+    def bulk_write(self, metrics):
+        """
+        Write multiple metrics to elasticsearch in one request
+
+        Args:
+            metrics (list): data with mappings to send to elasticsearch
+        """
+        actions = []
+        index = self.get_index()
+        for metric in metrics:
+            actions.append({'index': {'_index': index, '_type': self.doc_type}})
+            actions.append(metric)
+        try:
+            self.client.bulk(actions)
+        except TransportError as exc:
+            logger.warning('bulk_write metrics %r failure %r', metrics, exc)
