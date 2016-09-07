@@ -35,7 +35,7 @@ class TestTimeExecution(TestBaseBackend):
 
     def stop_worker(self):
         self.backend.worker_limit = 0
-        time.sleep(self.qtimeout)
+        time.sleep(self.qtimeout * 2)
         self.assertEqual(self.backend.thread, None)
 
     def test_backend_args(self):
