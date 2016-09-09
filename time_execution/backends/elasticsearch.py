@@ -77,6 +77,10 @@ class ElasticsearchBackend(BaseMetricsBackend):
                                 "type": "float",
                                 "index": "not_analyzed"
                             },
+                            "origin": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            },
                         }
                     },
                 },
