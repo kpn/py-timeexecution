@@ -38,6 +38,13 @@ class TestTimeExecution(TestBaseBackend):
         time.sleep(self.qtimeout * 2)
         self.assertEqual(self.backend.thread, None)
 
+    def resume_worker(self, worker_limit=None, **kwargs):
+        self.backend.worker_limit = worker_limit
+        for key, val in kwargs.items():
+            if hasattr(self.backend, key):
+                setattr(self.backend, key, val)
+        self.backend.start_worker()
+
     def test_backend_args(self):
         self.MockedBackendClass.assert_called_with('arg1', 'arg2', key1='kwarg1', key2='kwarg2')
         ThreadedBackend(self.MockedBackendClass)
@@ -84,10 +91,7 @@ class TestTimeExecution(TestBaseBackend):
             go()
         self.assertTrue(self.backend._queue.full())
 
-        # resume the worker
-        self.backend.worker_limit = None
-        self.backend.bulk_timeout = self.qtimeout
-        self.backend.start_worker()
+        self.resume_worker(bulk_timeout=self.qtimeout)
         # wait until all metrics are picked up
         time.sleep(self.qsize * self.qtimeout)
         # check that metrics in the queue were sent with bulk_write calls
@@ -113,6 +117,12 @@ class TestTimeExecution(TestBaseBackend):
             loops_count,
             len(mocked_bulk_write.call_args[0][0])
         )
+
+    def test_queue_is_gone(self):
+        self.assertFalse(self.backend.thread is None)
+        self.backend._queue = None
+        time.sleep(2 * self.qtimeout)
+        self.assertTrue(self.backend.thread is None)
 
 
 class TestElastic(TestBaseBackend, ElasticTestMixin):
