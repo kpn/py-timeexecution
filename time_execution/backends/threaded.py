@@ -75,6 +75,10 @@ class ThreadedBackend(BaseMetricsBackend):
                 send_metrics()
                 last_write = time.time()
                 metrics = []
+            if self._queue is None:
+                # queue may be gone with the main thread
+                logger.warning('queue is gone, stopping the worker')
+                break
             try:  # blocking get
                 name, data = self._queue.get(True, self.queue_timeout)
             except Empty:
