@@ -118,10 +118,13 @@ class TestTimeExecution(TestBaseBackend):
             len(mocked_bulk_write.call_args[0][0])
         )
 
-    def test_queue_is_gone(self):
+    def test_worker_error(self):
         self.assertFalse(self.backend.thread is None)
-        self.backend._queue = None
-        time.sleep(2 * self.qtimeout)
+        # simulate TypeError in queue.get
+        with mock.patch.object(self.backend._queue, 'get', side_effect=TypeError):
+            # ensure worker loop repeat
+            time.sleep(2 * self.qtimeout)
+        # assert thread stopped
         self.assertTrue(self.backend.thread is None)
 
 
