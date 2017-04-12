@@ -45,7 +45,10 @@ class ThreadedBackend(BaseMetricsBackend):
         if self.thread:
             return
         self.fetched_items = 0
-        self.thread = threading.Thread(target=self.worker)
+        self.thread = threading.Thread(
+            target=self.worker,
+            name="TimeExecutionThread"
+        )
         self.thread.daemon = True
         self.thread.start()
 
