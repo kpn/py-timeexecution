@@ -45,6 +45,9 @@ class TestTimeExecution(TestBaseBackend):
                 setattr(self.backend, key, val)
         self.backend.start_worker()
 
+    def test_thread_name(self):
+        self.assertEquals(self.backend.thread.name, "TimeExecutionThread")
+
     def test_backend_args(self):
         self.MockedBackendClass.assert_called_with('arg1', 'arg2', key1='kwarg1', key2='kwarg2')
         ThreadedBackend(self.MockedBackendClass)
