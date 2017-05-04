@@ -24,6 +24,7 @@ class ThreadedBackend(BaseMetricsBackend):
             backend_args = tuple()
         if backend_kwargs is None:
             backend_kwargs = dict()
+        self.parent_thread = threading.current_thread()
         self.queue_timeout = queue_timeout
         self.worker_limit = worker_limit
         self.thread = None
@@ -49,7 +50,7 @@ class ThreadedBackend(BaseMetricsBackend):
             target=self.worker,
             name="TimeExecutionThread"
         )
-        self.thread.daemon = True
+        self.thread.daemon = False
         self.thread.start()
 
     def batch_ready(self, batch):
@@ -78,9 +79,11 @@ class ThreadedBackend(BaseMetricsBackend):
                 send_metrics()
                 last_write = time.time()
                 metrics = []
-            try:  # blocking get
+            try:
                 name, data = self._queue.get(True, self.queue_timeout)
             except Empty:
+                if not self.parent_thread.is_alive():
+                    return
                 continue
             except TypeError as err:
                 logger.warning('stopping the worker due to %r', err)
@@ -91,3 +94,4 @@ class ThreadedBackend(BaseMetricsBackend):
         if metrics:
             send_metrics()
         self.thread = None
+

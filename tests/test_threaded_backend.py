@@ -1,3 +1,5 @@
+
+import subprocess
 import time
 from datetime import datetime
 
@@ -99,6 +101,8 @@ class TestTimeExecution(TestBaseBackend):
         time.sleep(self.qsize * self.qtimeout)
         # check that metrics in the queue were sent with bulk_write calls
         call_args_list = self.mocked_backend.bulk_write.call_args_list
+
+        time.sleep(2 * self.qtimeout)
         self.assertEqual(
             self.qsize,
             sum(len(args[0]) for args, _ in call_args_list)
@@ -116,6 +120,8 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(loops_count, self.backend.fetched_items)
         mocked_bulk_write = self.mocked_backend.bulk_write
         mocked_bulk_write.assert_called_once()
+
+        time.sleep(self.qtimeout * 2)
         self.assertEqual(
             loops_count,
             len(mocked_bulk_write.call_args[0][0])
@@ -129,6 +135,20 @@ class TestTimeExecution(TestBaseBackend):
             time.sleep(2 * self.qtimeout)
         # assert thread stopped
         self.assertTrue(self.backend.thread is None)
+
+
+class TestThreaded(object):
+    def test_calling_thread_waits_for_worker(self):
+        """
+        Start a process we are not the parent of and see if it waits for at
+        least the queue timeout (1) before exiting. If we were using a daemon
+        thread the process would exit immediately.
+        """
+        start = time.time()
+        result = subprocess.call("./tests/dummy_process.py")
+        delta = time.time() - start
+        assert result == 0
+        assert delta >= 1
 
 
 class TestElastic(TestBaseBackend, ElasticTestMixin):
