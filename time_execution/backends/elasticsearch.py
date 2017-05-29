@@ -36,7 +36,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
         return self.index_pattern.format(index=self.index, date=datetime.now())
 
     def _setup_index(self):
-        return self.client.indices.create(self.index, ignore=400)
+        return self.client.indices.create(self.get_index(), ignore=400)
 
     def _setup_mapping(self):
         return self.client.indices.put_template(
