@@ -94,4 +94,3 @@ class ThreadedBackend(BaseMetricsBackend):
         if metrics:
             send_metrics()
         self.thread = None
-
