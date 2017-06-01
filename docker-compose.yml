@@ -8,11 +8,11 @@ influx:
     - PRE_CREATE_DB=metrics
     - UDP_DB=metrics
 elasticsearch:
-  image: elasticsearch:2
+  image: elasticsearch:5
   ports:
     - "9200:9200"
 kibana:
-  image: kibana:4
+  image: kibana:5
   ports:
     - "5601:5601"
   links:
