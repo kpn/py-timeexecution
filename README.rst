@@ -29,7 +29,7 @@ Backends
 --------
 
 - InfluxDB 0.8
-- Elasticsearch 2.1
+- Elasticsearch 5
 
 
 Installation

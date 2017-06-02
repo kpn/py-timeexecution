@@ -49,9 +49,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
                             {
                                 "strings": {
                                     "mapping": {
-                                        "index": "not_analyzed",
-                                        "omit_norms": True,
-                                        "type": "string"
+                                        "type": "keyword"
                                     },
                                     "match_mapping_type": "string"
                                 }
@@ -62,24 +60,19 @@ class ElasticsearchBackend(BaseMetricsBackend):
                         },
                         "properties": {
                             "name": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword"
                             },
                             "timestamp": {
-                                "type": "date",
-                                "index": "not_analyzed"
+                                "type": "date"
                             },
                             "hostname": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword"
                             },
                             "value": {
-                                "type": "float",
-                                "index": "not_analyzed"
+                                "type": "float"
                             },
                             "origin": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword"
                             },
                         }
                     },
