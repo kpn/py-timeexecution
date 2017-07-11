@@ -8,6 +8,8 @@ import six
 from fqn_decorators import Decorator
 from pkgsettings import Settings
 
+from .constants import PY_35_GT
+
 SHORT_HOSTNAME = socket.gethostname()
 
 settings = Settings()
@@ -74,3 +76,10 @@ class time_execution(Decorator):
                 six.reraise(*self.exc_info)
             except Exception as e:
                 return e
+
+
+if PY_35_GT:
+    from fqn_decorators.async import AsyncDecorator  # isort:skip
+
+    class time_execution_async(AsyncDecorator, time_execution):
+        pass
