@@ -78,6 +78,29 @@ And the following in Elasticsearch
         }
     ]
 
+
+It's also possible to decorate coroutines or awaitables in Python >=3.5.
+
+For example:
+
+.. code-block:: python
+
+    import asyncio
+    from time_execution import time_execution_async
+
+    # ... Setup the desired backend(s) as described above ...
+
+    # Wrap the methods where you want the metrics
+    @time_execution_async
+    async def hello():
+        await asyncio.sleep(1)
+        return 'World'
+
+    # Now when we schedule hello() we will get metrics in our backends
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(hello())
+
+
 .. _usage-hooks:
 
 Hooks
