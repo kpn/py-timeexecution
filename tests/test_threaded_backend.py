@@ -2,6 +2,7 @@
 import subprocess
 import time
 from datetime import datetime
+from multiprocessing import Process
 
 import mock
 from freezegun import freeze_time
@@ -60,14 +61,15 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(0, self.backend.fetched_items)
 
     def test_decorator(self):
-        with freeze_time('2016-08-01 00:00:00'):
+        now = datetime.now()
+        with freeze_time(now):
             go()
         # ensure worker thread catches up
         time.sleep(2 * self.backend.bulk_timeout)
         mocked_write = self.mocked_backend.bulk_write
         self.assertEqual(1, self.backend.fetched_items)
         mocked_write.assert_called_with([{
-            'timestamp': datetime(2016, 8, 1, 0, 0),
+            'timestamp': now,
             'hostname': SHORT_HOSTNAME,
             'name': 'tests.conftest.go',
             'value': 0.0,
@@ -135,6 +137,18 @@ class TestTimeExecution(TestBaseBackend):
             time.sleep(2 * self.qtimeout)
         # assert thread stopped
         self.assertTrue(self.backend.thread is None)
+
+    def test_producer_in_another_process(self):
+        # assure worker is stopped
+        self.stop_worker()
+
+        # fill in the queue
+        process = Process(target=go)
+        process.start()
+        process.join()
+
+        # check the queue contains the item
+        self.assertEqual(self.backend._queue.qsize(), 1)
 
 
 class TestThreaded(object):

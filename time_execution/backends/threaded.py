@@ -4,13 +4,14 @@ import datetime
 import logging
 import threading
 import time
+from multiprocessing import Queue
 
 from time_execution.backends.base import BaseMetricsBackend
 
 try:
-    from Queue import Queue, Empty, Full
+    from Queue import Empty, Full
 except ImportError:
-    from queue import Queue, Empty, Full
+    from queue import Empty, Full
 
 
 logger = logging.getLogger(__file__)
