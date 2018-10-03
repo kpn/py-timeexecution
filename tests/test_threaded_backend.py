@@ -3,13 +3,15 @@ import subprocess
 import time
 from datetime import datetime
 from multiprocessing import Process
+from threading import Thread
 
 import mock
+import pytest
 from freezegun import freeze_time
 from tests.conftest import go
 from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
-from time_execution.backends import elasticsearch
+from time_execution.backends import elasticsearch, kafka
 from time_execution.backends.threaded import ThreadedBackend
 from time_execution.decorator import SHORT_HOSTNAME
 
@@ -49,7 +51,7 @@ class TestTimeExecution(TestBaseBackend):
         self.backend.start_worker()
 
     def test_thread_name(self):
-        self.assertEquals(self.backend.thread.name, "TimeExecutionThread")
+        self.assertEqual(self.backend.thread.name, "TimeExecutionThread")
 
     def test_backend_args(self):
         self.MockedBackendClass.assert_called_with('arg1', 'arg2', key1='kwarg1', key2='kwarg2')
@@ -150,6 +152,27 @@ class TestTimeExecution(TestBaseBackend):
         # check the queue contains the item
         self.assertEqual(self.backend._queue.qsize(), 1)
 
+    def test_flush_metrics_when_parent_process_not_alive(self):
+        self.stop_worker()
+        loops = 3
+
+        with mock.patch.object(self.backend, 'parent_thread', spec=Thread) as parent_thread:
+            parent_thread.is_alive.return_value = False
+
+            for _ in range(loops):
+                go()
+
+            #: do not allow flush metrics before checking if parent_thread is alive
+            self.backend.worker_limit = loops + 1
+            self.backend.worker()
+
+        mocked_bulk_write = self.mocked_backend.bulk_write
+        mocked_bulk_write.assert_called_once()
+        self.assertEqual(
+            loops,
+            len(mocked_bulk_write.call_args[0][0])
+        )
+
 
 class TestThreaded(object):
     def test_calling_thread_waits_for_worker(self):
@@ -183,3 +206,29 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
         time.sleep(2 * self.backend.bulk_timeout)
         metrics = self._query_backend(self.backend.backend, go.fqn)
         self.assertEqual(metrics['hits']['total'], 1)
+
+
+class TestSetupBackend:
+    @pytest.mark.parametrize('backend_string, expected_class', (
+        ('time_execution.backends.elasticsearch.ElasticsearchBackend', elasticsearch.ElasticsearchBackend),
+        ('time_execution.backends.kafka.KafkaBackend', kafka.KafkaBackend),
+    ))
+    def test_backend_importpath(self, backend_string, expected_class):
+        backend = ThreadedBackend(
+            backend=backend_string,
+        )
+
+        assert isinstance(backend.backend, expected_class)
+
+    def test_backend_importpath_wrong_path(self):
+        with pytest.raises(ImportError):
+            ThreadedBackend(
+                backend='time_execution.backends.wrong_path.NewBackend',
+            )
+
+    def test_backend_class(self):
+        backend = ThreadedBackend(
+            backend=elasticsearch.ElasticsearchBackend
+        )
+
+        assert isinstance(backend.backend, elasticsearch.ElasticsearchBackend)

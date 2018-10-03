@@ -3,6 +3,14 @@
 from pkgversion import list_requirements, pep440_version, write_setup_py
 from setuptools import find_packages
 
+extra_dependencies = {
+    "elasticsearch": list_requirements('requirements/requirements-elasticsearch.txt'),
+    "influxdb": list_requirements('requirements/requirements-influxdb.txt'),
+    "kafka": list_requirements('requirements/requirements-kafka.txt'),
+}
+
+extra_dependencies["all"] = list(set(sum(extra_dependencies.values(), [])))
+
 write_setup_py(
     name='timeexecution',
     version=pep440_version(),
@@ -12,6 +20,7 @@ write_setup_py(
     author_email='niels@elements.nl',
     url='https://github.com/kpn-digital/py-timeexecution',
     install_requires=list_requirements('requirements/requirements-base.txt'),
+    extras_require=extra_dependencies,
     packages=find_packages(exclude=['tests*']),
     tests_require=['tox'],
     include_package_data=True,

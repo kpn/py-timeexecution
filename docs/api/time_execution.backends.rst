@@ -30,4 +30,20 @@ time_execution.backends.influxdb module
     :undoc-members:
     :show-inheritance:
 
+time_execution.backends.kafka module
+------------------------------------
+
+.. automodule:: time_execution.backends.kafka
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+time_execution.backends.threaded module
+---------------------------------------
+
+.. automodule:: time_execution.backends.threaded
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
