@@ -17,6 +17,7 @@ from .test_elasticsearch import ElasticTestMixin
 
 
 class TestTimeExecution(TestBaseBackend):
+    LAZY_INIT = False
 
     def setUp(self):
         self.qsize = 10
@@ -31,6 +32,7 @@ class TestTimeExecution(TestBaseBackend):
             backend_kwargs=dict(key1='kwarg1', key2='kwarg2'),
             queue_maxsize=self.qsize,
             queue_timeout=self.qtimeout,
+            lazy_init=self.LAZY_INIT,
         )
         self.backend.bulk_size = self.qsize / 2
         self.backend.bulk_timeout = self.qtimeout * 2
@@ -49,6 +51,8 @@ class TestTimeExecution(TestBaseBackend):
         self.backend.start_worker()
 
     def test_thread_name(self):
+        if self.backend.lazy_init:
+            go()
         self.assertEquals(self.backend.thread.name, "TimeExecutionThread")
 
     def test_backend_args(self):
@@ -130,6 +134,8 @@ class TestTimeExecution(TestBaseBackend):
         )
 
     def test_worker_error(self):
+        if self.backend.lazy_init:
+            go()
         self.assertFalse(self.backend.thread is None)
         # simulate TypeError in queue.get
         with mock.patch.object(self.backend._queue, 'get', side_effect=TypeError):
@@ -139,6 +145,8 @@ class TestTimeExecution(TestBaseBackend):
         self.assertTrue(self.backend.thread is None)
 
     def test_producer_in_another_process(self):
+        if self.backend.lazy_init:
+            go()
         # assure worker is stopped
         self.stop_worker()
 
@@ -149,6 +157,10 @@ class TestTimeExecution(TestBaseBackend):
 
         # check the queue contains the item
         self.assertEqual(self.backend._queue.qsize(), 1)
+
+
+class TestTimeExecutionLazy(TestTimeExecution):
+    LAZY_INIT = True
 
 
 class TestThreaded(object):
@@ -166,6 +178,7 @@ class TestThreaded(object):
 
 
 class TestElastic(TestBaseBackend, ElasticTestMixin):
+    LAZY_INIT = False
 
     def setUp(self):
         self.qtime = 0.1
@@ -174,6 +187,7 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
             backend_args=('elasticsearch', ),
             backend_kwargs=dict(index='threaded-metrics'),
             queue_timeout=self.qtime,
+            lazy_init=self.LAZY_INIT,
         )
         settings.configure(backends=[self.backend])
         self._clear(self.backend.backend)
@@ -183,3 +197,7 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
         time.sleep(2 * self.backend.bulk_timeout)
         metrics = self._query_backend(self.backend.backend, go.fqn)
         self.assertEqual(metrics['hits']['total'], 1)
+
+
+class TestElasticLazy(TestBaseBackend, ElasticTestMixin):
+    LAZY_INIT = True

@@ -20,12 +20,13 @@ logger = logging.getLogger(__file__)
 class ThreadedBackend(BaseMetricsBackend):
 
     def __init__(self, backend, backend_args=None, backend_kwargs=None,
-                 queue_maxsize=1000, queue_timeout=0.5, worker_limit=None):
+                 queue_maxsize=1000, queue_timeout=0.5, worker_limit=None,
+                 lazy_init=False):
         if backend_args is None:
             backend_args = tuple()
         if backend_kwargs is None:
             backend_kwargs = dict()
-        self.parent_thread = threading.current_thread()
+        self.parent_thread = None
         self.queue_timeout = queue_timeout
         self.worker_limit = worker_limit
         self.thread = None
@@ -33,10 +34,16 @@ class ThreadedBackend(BaseMetricsBackend):
         self.bulk_size = 50
         self.bulk_timeout = 1  # second
         self.backend = backend(*backend_args, **backend_kwargs)
-        self._queue = Queue(maxsize=queue_maxsize)
-        self.start_worker()
+        self._queue = None
+        self.queue_maxsize = queue_maxsize
+        self.lazy_init = lazy_init
+        if not lazy_init:
+            self.start_worker()
 
     def write(self, name, **data):
+        if self.lazy_init and not self.thread:
+            self.start_worker()
+
         data["timestamp"] = datetime.datetime.utcnow()
         try:
             self._queue.put_nowait((name, data))
@@ -46,6 +53,10 @@ class ThreadedBackend(BaseMetricsBackend):
     def start_worker(self):
         if self.thread:
             return
+
+        self.parent_thread = threading.current_thread()
+        if not self._queue:
+            self._queue = Queue(maxsize=self.queue_maxsize)
         self.fetched_items = 0
         self.thread = threading.Thread(
             target=self.worker,
