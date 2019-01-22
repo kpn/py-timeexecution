@@ -79,7 +79,7 @@ class time_execution(Decorator):
 
 
 if PY_35_GT:
-    from fqn_decorators.async import AsyncDecorator  # isort:skip
+    from fqn_decorators.asynchronous import AsyncDecorator  # isort:skip
 
     class time_execution_async(AsyncDecorator, time_execution):
         pass

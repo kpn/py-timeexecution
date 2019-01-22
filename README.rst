@@ -30,14 +30,36 @@ Backends
 
 - InfluxDB 0.8
 - Elasticsearch 5
+- Kafka
 
 
 Installation
 ------------
 
+If you want to use it with `ElasticSearchBackend`
+
 .. code-block:: bash
 
-    $ pip install timeexecution
+    $ pip install timeexecution[elasticsearch]
+
+with `InfluxBackend`
+
+.. code-block:: bash
+
+    $ pip install timeexecution[influxdb]
+
+with `KafkaBackend`
+
+.. code-block:: bash
+
+    $ pip install timeexecution[kafka]
+
+or if you prefer to have all backend to easily switch between them
+
+.. code-block:: bash
+
+    $ pip install timeexecution[all]
+
 
 Usage
 -----
@@ -118,6 +140,45 @@ And the following in Elasticsearch
         }
     ]
 
+It's also possible to run backend in different thread with logic behind it, to send metrics in bulk mode.
+
+For example:
+
+ .. code-block:: python
+
+    from time_execution import settings, time_execution
+    from time_execution.backends.threaded import ThreadedBackend
+
+    # Setup threaded backend which will be run on separate thread
+    threaded_backend = ThreadedBackend(
+        backend=ElasticsearchBackend,
+        backend_kwargs={
+            "host" : "elasticsearch",
+            "index": "metrics",
+        }
+    )
+
+    # there is also possibility to configure backend by import path, like:
+    threaded_backend = ThreadedBackend(
+        backend="time_execution.backends.kafka.KafkaBackend",
+        #: any other configuration belongs to backend
+        backend_kwargs={
+            "hosts" : "kafka",
+            "topic": "metrics"
+        }
+    )
+
+    # Configure the time_execution decorator
+    settings.configure(backends=[threaded_backend])
+
+    # Wrap the methods where u want the metrics
+    @time_execution
+    def hello():
+        return 'World'
+
+    # Now when we call hello() we put metrics in queue to send it either in some configurable time later
+    # or when queue will reach configurable limit.
+    hello()
 
 It's also possible to decorate coroutines or awaitables in Python >=3.5.
 

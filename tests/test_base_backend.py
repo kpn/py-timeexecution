@@ -8,3 +8,8 @@ class TestBaseBackend(unittest.TestCase):
         backend = BaseMetricsBackend()
         with self.assertRaises(NotImplementedError):
             backend.write('test')
+
+    def test_bulk_write(self):
+        backend = BaseMetricsBackend()
+        with self.assertRaises(NotImplementedError):
+            backend.bulk_write([])

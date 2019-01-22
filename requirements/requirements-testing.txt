@@ -8,6 +8,7 @@ mock>=2.0,<3.0
 
 # PyTest for running the tests.
 pytest
+pytest-asyncio; python_version >= '3.5'
 pytest-cov
 
 # docs
