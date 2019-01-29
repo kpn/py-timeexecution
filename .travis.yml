@@ -1,17 +1,13 @@
 language: python
 sudo: required
-
 services:
-  - docker
-
+- docker
 script:
-  - make docker/build
-
+- make docker/build
 before_install:
-  - pip install codecov
+- pip install codecov
 after_success:
-  - codecov
-
+- codecov
 deploy:
   provider: pypi
   user: kpn-digital
@@ -21,3 +17,5 @@ deploy:
   on:
     tags: true
     all_branches: true
+nPomT9sIipPXUvJgA86PiiLHIr8BFTkHw7DCTNRHkly1:
+  secure: 6Tg5doO4JxTwy+cAGYLmtAWa/jMWdwmLC9J/U8tpR03Dem/78yysA5qJ9mJ+yV+Ig4QdZdkn2otmZbHaRjQ8gvjk9Xh17FWO4vijGbIPJsNBz7ccfSDF7jW18UZ775unasxnLoBGey4Y77+QZsy1HyRxfZKIPpHICnKI+miTC3NWvzQw10EMSbefhnYrWgrDqnpq6GSoXqBfbvUqi5FKunq+6ymy6g0w1c6unpyVgkTa822yC/XmECr0Go5TXd6nptRlJMu1qL9bs5kuAFWt2oe5R7xqjge1GMEDV3982RUR5hmQ6XfmRsqA4AaEfRYGVMB7cLhqiJJeBhpcqbI34nz0FsSEeaxLBKtdpWTPle51ER4cYh0m7XkMCTENnTOHFPQN1AeQw4aq+9FRsRn4GzvIsZdO3LV64/rNpB2tHJSO9as+q8xia8FiblqskYMuuRm0S75dox+tq/HsmBYpTfI0YLA00hxkD854g6kkSlTTerSRScS4bLnI76zr+onOIM7V+qbQhIrOC52vjgr4a7hxPhcDeCa5Et1PQRuLYE1tRExCAW4EANRH/jS9CrkJ9rHXRPuAgaBbxI4s6/4l4ZFdwaQhQyNEqe+4WUuKpAqIPhsz0AVfG7kV2DO//oMmw0cmxzPLJu3EoaZjRdPqfzEW5Ira+TvM/cj8wKPBr3o=
