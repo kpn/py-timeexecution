@@ -32,7 +32,7 @@ clean: pyclean docsclean
 	@rm -rf .tox
 
 venv:
-	@virtualenv -p python2.7 venv
+	@python3.6 -m venv venv
 	@$(PIP) install -U "pip>=7.0" -q
 	@$(PIP) install -r $(DEPS)
 

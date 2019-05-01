@@ -1,4 +1,4 @@
-FROM kpndigital/tox:latest
+FROM kpndigital/tox:py27_py35
 
 WORKDIR /app
 
