@@ -144,7 +144,7 @@ It's also possible to run backend in different thread with logic behind it, to s
 
 For example:
 
- .. code-block:: python
+.. code-block:: python
 
     from time_execution import settings, time_execution
     from time_execution.backends.threaded import ThreadedBackend
@@ -238,6 +238,49 @@ See the following example how to setup hooks.
 
     # Configure the time_execution decorator, but now with hooks
     settings.configure(backends=[backend], hooks=[my_hook])
+
+
+There is also possibility to create decorator with custom set of hooks. It is needed for example to track `celery` tasks.
+
+.. code-block:: python
+
+    from multiprocessing import current_process
+    # Hook for celery tasks
+    def celery_hook(response, exception, metric, func_args, func_kwargs):
+        """
+        Add celery worker-specific details into response.
+        """
+        p = current_process()
+        hook = {
+            'name': metric.get('name'),
+            'value': metric.get('value'),
+            'success': exception is None,
+            'process_name': p.name,
+            'process_pid': p.pid,
+        }
+        return hook
+
+    # Create time_execution decorator with extra hooks
+    time_execution_celery = time_execution(extra_hooks=[celery_hook])
+
+    @celery.task
+    @time_execution_celery
+    def celery_task(self, **kwargs):
+        return True
+
+    # Or do it in place where it is needed
+    @celery.task
+    @time_execution(extra_hooks=[celery_hook])
+    def celery_task(self, **kwargs):
+        return True
+
+    # Or override default hooks by custom ones. Just setup `disable_default_hooks` flag
+    @celery.task
+    @time_execution(extra_hooks=[celery_hook], disable_default_hooks=True)
+    def celery_task(self, **kwargs):
+        return True
+
+
 
 Manually sending metrics
 ------------------------

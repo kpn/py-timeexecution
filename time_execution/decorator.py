@@ -25,9 +25,9 @@ def write_metric(name, **metric):
         backend.write(name, **metric)
 
 
-def _apply_hooks(**kwargs):
+def _apply_hooks(hooks, **kwargs):
     metadata = dict()
-    for hook in settings.hooks:
+    for hook in hooks:
         hook_result = hook(**kwargs)
         if hook_result:
             metadata.update(hook_result)
@@ -56,9 +56,16 @@ class time_execution(Decorator):
         if origin:
             metric['origin'] = origin
 
+        hooks = self.params.get('extra_hooks', [])
+        disable_default_hooks = self.params.get('disable_default_hooks', False)
+
+        if not disable_default_hooks:
+            hooks = settings.hooks + hooks
+
         # Apply the registered hooks, and collect the metadata they might
         # return to be stored with the metrics
         metadata = _apply_hooks(
+            hooks=hooks,
             response=self.result,
             exception=self.get_exception(),
             metric=metric,
