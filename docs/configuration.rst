@@ -1,6 +1,6 @@
-========
-Settings
-========
+=============
+Configuration
+=============
 
 Package configuration is done through using package settings:
 

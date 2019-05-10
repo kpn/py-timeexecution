@@ -12,10 +12,9 @@ Contents:
    :glob:
    :maxdepth: 2
 
-   installation
-   usage
+   readme
    api
-   settings
+   configuration
 
 Indices and tables
 ==================
