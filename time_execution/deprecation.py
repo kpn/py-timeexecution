@@ -1,0 +1,2 @@
+class HookDeprecatedWarning(DeprecationWarning):
+    pass

@@ -3,12 +3,16 @@ Time Execution decorator
 """
 import socket
 import time
+import warnings
 
 import six
 from fqn_decorators import Decorator
 from pkgsettings import Settings
 
 from .constants import PY_35_GT
+from .deprecation import HookDeprecatedWarning
+
+warnings.simplefilter('once', HookDeprecatedWarning)
 
 SHORT_HOSTNAME = socket.gethostname()
 
@@ -25,10 +29,23 @@ def write_metric(name, **metric):
         backend.write(name, **metric)
 
 
-def _apply_hooks(hooks, **kwargs):
+def _apply_hooks(hooks, response, exception, metric, func, func_args, func_kwargs):
     metadata = dict()
     for hook in hooks:
-        hook_result = hook(**kwargs)
+        # backward compatibility with old hooks
+        try:
+            hook_result = hook(
+                response=response, exception=exception, metric=metric, func=func, func_args=func_args,
+                func_kwargs=func_kwargs
+            )
+        except TypeError:
+            warnings.warn(
+                "Hook %s is outdated. Update interface by adding one more argument `func` in it." % hook.__name__,
+                HookDeprecatedWarning)
+            hook_result = hook(
+                response=response, exception=exception, metric=metric, func_args=func_args, func_kwargs=func_kwargs
+            )
+
         if hook_result:
             metadata.update(hook_result)
     return metadata
@@ -69,6 +86,7 @@ class time_execution(Decorator):
             response=self.result,
             exception=self.get_exception(),
             metric=metric,
+            func=self.func,
             func_args=self.args,
             func_kwargs=self.kwargs
         )
