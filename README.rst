@@ -8,53 +8,59 @@ Time Execution
     :target: http://codecov.io/github/kpn-digital/py-timeexecution?branch=master
 
 .. image:: https://img.shields.io/pypi/v/timeexecution.svg
-    :target: https://pypi.python.org/pypi/timeexecution
+    :target: https://pypi.org/project/timeexecution
+
+.. image:: https://img.shields.io/pypi/pyversions/timeexecution.svg
+    :target: https://pypi.org/project/timeexecution
 
 .. image:: https://readthedocs.org/projects/py-timeexecution/badge/?version=latest
     :target: http://py-timeexecution.readthedocs.org/en/latest/?badge=latest
 
+.. image:: https://img.shields.io/pypi/l/timeexecution.svg
+    :target: https://pypi.org/project/timeexecution
 
-This package is designed to record metrics of the application into a backend.
-With the help of grafana_ you can easily create dashboards with them
+
+This package is designed to record application metrics into specific backends.
+With the help of Grafana_ or Kibana_ you can easily use these metrics to create meaningful monitoring dashboards.
 
 
 Features
 --------
 
-- Sending data to multiple backends
+- Sending data to multiple backends (e.g. ElasticSearch)
 - Custom backends
-- Hooks
+- Hooks to include additional data per metric.
 
-Backends
---------
+Available backends
+------------------
 
 - InfluxDB 0.8
-- Elasticsearch 5
+- Elasticsearch >=5,<7
 - Kafka
 
 
 Installation
 ------------
 
-If you want to use it with `ElasticSearchBackend`
+If you want to use it with the ``ElasticSearchBackend``:
 
 .. code-block:: bash
 
     $ pip install timeexecution[elasticsearch]
 
-with `InfluxBackend`
+with ``InfluxBackend``:
 
 .. code-block:: bash
 
     $ pip install timeexecution[influxdb]
 
-with `KafkaBackend`
+with ``KafkaBackend``:
 
 .. code-block:: bash
 
     $ pip install timeexecution[kafka]
 
-or if you prefer to have all backend to easily switch between them
+or if you prefer to have all backends available and easily switch between them:
 
 .. code-block:: bash
 
@@ -67,9 +73,9 @@ Usage
 To use this package you decorate the functions you want to time its execution.
 Every wrapped function will create a metric consisting of 3 default values:
 
-- `name` - The name of the series the metric will be stored in
-- `value` - The time it took in ms for the wrapped function to complete
-- `hostname` - The hostname of the machine the code is running on
+- ``name`` - The name of the series the metric will be stored in. Byt default, timeexecution will use the fully qualified name of the decorated method or function (e.g. ).
+- ``value`` - The time it took in ms for the wrapped function to complete
+- ``hostname`` - The hostname of the machine the code is running on
 
 See the following example
 
@@ -202,10 +208,12 @@ For example:
     loop.run_until_complete(hello())
 
 
+.. _usage-hooks: 
+
 Hooks
 -----
 
-`time_execution` supports hooks where you can change the metric before its
+``time_execution`` supports hooks where you can change the metric before its
 being sent to the backend.
 
 With a hook you can add additional and change existing fields. This can be
@@ -214,11 +222,11 @@ the response of the wrapped function.
 
 A hook will always get 3 arguments:
 
-- `response` - The returned value of the wrapped function
-- `exception` - The raised exception of the wrapped function
-- `metric` - A dict containing the data to be send to the backend
-- `func_args` - Original args received by the wrapped function.
-- `func_kwargs` - Original kwargs received by the wrapped function.
+- ``response`` - The returned value of the wrapped function
+- ``exception`` - The raised exception of the wrapped function
+- ``metric`` - A dict containing the data to be send to the backend
+- ``func_args`` - Original args received by the wrapped function.
+- ``func_kwargs`` - Original kwargs received by the wrapped function.
 
 From within a hook you can change the `name` if you want the metrics to be split
 into multiple series.
@@ -228,7 +236,7 @@ See the following example how to setup hooks.
 .. code-block:: python
 
     # Now lets create a hook
-    def my_hook(response, exception, metric, func_args, func_kwargs):
+    def my_hook(response, exception, metric, func, func_args, func_kwargs):
         status_code = getattr(response, 'status_code', None)
         if status_code:
             return dict(
@@ -246,7 +254,7 @@ There is also possibility to create decorator with custom set of hooks. It is ne
 
     from multiprocessing import current_process
     # Hook for celery tasks
-    def celery_hook(response, exception, metric, func_args, func_kwargs):
+    def celery_hook(response, exception, metric, func, func_args, func_kwargs):
         """
         Add celery worker-specific details into response.
         """
@@ -292,12 +300,12 @@ See the following example.
 
 .. code-block:: python
 
+    from time_execution import write_metric
+
     loadavg = os.getloadavg()
     write_metric('cpu.load.1m', value=loadavg[0])
     write_metric('cpu.load.5m', value=loadavg[1])
     write_metric('cpu.load.15m', value=loadavg[2])
-
-.. _grafana: http://grafana.org/
 
 
 Custom Backend
@@ -305,7 +313,7 @@ Custom Backend
 
 Writing a custom backend is very simple, all you need to do is create a class
 with a `write` method. It is not required to extend `BaseMetricsBackend`
-but in order to easily upgrade I recommend u do.
+but, in order to easily upgrade, we recommend you do.
 
 .. code-block:: python
 
@@ -317,23 +325,40 @@ but in order to easily upgrade I recommend u do.
             print(name, data)
 
 
+Example scenario
+----------------
+
+In order to read the metrics, e.g. using ElasticSearch as a backend, the following lucene query could be used:
+
+.. code-block::
+
+    name:"__main__.hello" AND hostname:dfaa4928109f
+
+For more advanced query syntax, please have a look at the `Lucene documentation`_ and the `ElasticSearch Query DSL`_ reference.
+
+
 Contribute
 ----------
 
-You have something to contribute ? Great !
-A few things that may come in handy.
+You have something to contribute? Great! There are a few things that may come in handy.
 
 Testing in this project is done via docker. There is a docker-compose to easily
 get all the required containers up and running.
 
 There is a Makefile with a few targets that we use often:
 
-- `make test`
-- `make isort`
-- `make lint`
-- `make build`
-- `make setup.py`
+- ``make test``
+- ``make isort``
+- ``make lint``
+- ``make build``
+- ``make setup.py``
 
-All of these make targets can be prefixed by `docker/`. This will execute
+All of these make targets can be prefixed by ``docker/``. This will execute
 the target inside the docker container instead of on your local machine.
-For example `make docker/build`.
+For example ``make docker/build``.
+
+
+.. _Grafana: http://grafana.org/
+.. _Kibana: https://www.elastic.co/products/kibana
+.. _Lucene Documentation: https://lucene.apache.org/core/documentation.html
+.. _ElasticSearch Query DSL: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html

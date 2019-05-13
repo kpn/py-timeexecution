@@ -26,6 +26,14 @@ time_execution.decorator module
     :undoc-members:
     :show-inheritance:
 
+time_execution.deprecation module
+---------------------------------
+
+.. automodule:: time_execution.deprecation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 time_execution.serializer module
 --------------------------------
 
