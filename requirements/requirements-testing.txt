@@ -15,3 +15,7 @@ pytest-cov
 sphinx
 sphinxcontrib-plantuml
 sphinx_rtd_theme
+
+# gitchangelog
+gitchangelog
+pystache
