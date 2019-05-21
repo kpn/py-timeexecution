@@ -66,3 +66,6 @@ publish: setup.py
 	@$(PYTHON) setup.py sdist upload
 
 build: clean venv tox setup.py
+
+changelog:
+	gitchangelog
