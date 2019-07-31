@@ -1,6 +1,8 @@
 tox
 isort
-flake8==3.6.0
+black; python_version >= "3.6"
+flake8
+twine
 pkgversion
 
 freezegun>=0.3.7,<0.4

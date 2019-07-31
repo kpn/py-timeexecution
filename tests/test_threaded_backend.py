@@ -1,4 +1,3 @@
-
 import subprocess
 import time
 from datetime import datetime
@@ -19,7 +18,6 @@ from .test_elasticsearch import ElasticTestMixin
 
 
 class TestTimeExecution(TestBaseBackend):
-
     def setUp(self):
         self.qsize = 10
         self.qtimeout = 0.1
@@ -70,12 +68,9 @@ class TestTimeExecution(TestBaseBackend):
         time.sleep(2 * self.backend.bulk_timeout)
         mocked_write = self.mocked_backend.bulk_write
         self.assertEqual(1, self.backend.fetched_items)
-        mocked_write.assert_called_with([{
-            'timestamp': now,
-            'hostname': SHORT_HOSTNAME,
-            'name': 'tests.conftest.go',
-            'value': 0.0,
-        }])
+        mocked_write.assert_called_with(
+            [{'timestamp': now, 'hostname': SHORT_HOSTNAME, 'name': 'tests.conftest.go', 'value': 0.0}]
+        )
 
     def test_double_start(self):
         self.assertEqual(0, self.backend.fetched_items)
@@ -107,10 +102,7 @@ class TestTimeExecution(TestBaseBackend):
         call_args_list = self.mocked_backend.bulk_write.call_args_list
 
         time.sleep(2 * self.qtimeout)
-        self.assertEqual(
-            self.qsize,
-            sum(len(args[0]) for args, _ in call_args_list)
-        )
+        self.assertEqual(self.qsize, sum(len(args[0]) for args, _ in call_args_list))
 
     def test_worker_sends_remainder(self):
         self.stop_worker()
@@ -126,10 +118,7 @@ class TestTimeExecution(TestBaseBackend):
         mocked_bulk_write.assert_called_once()
 
         time.sleep(self.qtimeout * 2)
-        self.assertEqual(
-            loops_count,
-            len(mocked_bulk_write.call_args[0][0])
-        )
+        self.assertEqual(loops_count, len(mocked_bulk_write.call_args[0][0]))
 
     def test_worker_error(self):
         self.assertFalse(self.backend.thread is None)
@@ -168,10 +157,7 @@ class TestTimeExecution(TestBaseBackend):
 
         mocked_bulk_write = self.mocked_backend.bulk_write
         mocked_bulk_write.assert_called_once()
-        self.assertEqual(
-            loops,
-            len(mocked_bulk_write.call_args[0][0])
-        )
+        self.assertEqual(loops, len(mocked_bulk_write.call_args[0][0]))
 
 
 class TestThreaded(object):
@@ -189,12 +175,11 @@ class TestThreaded(object):
 
 
 class TestElastic(TestBaseBackend, ElasticTestMixin):
-
     def setUp(self):
         self.qtime = 0.1
         self.backend = ThreadedBackend(
             elasticsearch.ElasticsearchBackend,
-            backend_args=('elasticsearch', ),
+            backend_args=('elasticsearch',),
             backend_kwargs=dict(index='threaded-metrics'),
             queue_timeout=self.qtime,
         )
@@ -209,26 +194,23 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
 
 
 class TestSetupBackend:
-    @pytest.mark.parametrize('backend_string, expected_class', (
-        ('time_execution.backends.elasticsearch.ElasticsearchBackend', elasticsearch.ElasticsearchBackend),
-        ('time_execution.backends.kafka.KafkaBackend', kafka.KafkaBackend),
-    ))
+    @pytest.mark.parametrize(
+        'backend_string, expected_class',
+        (
+            ('time_execution.backends.elasticsearch.ElasticsearchBackend', elasticsearch.ElasticsearchBackend),
+            ('time_execution.backends.kafka.KafkaBackend', kafka.KafkaBackend),
+        ),
+    )
     def test_backend_importpath(self, backend_string, expected_class):
-        backend = ThreadedBackend(
-            backend=backend_string,
-        )
+        backend = ThreadedBackend(backend=backend_string)
 
         assert isinstance(backend.backend, expected_class)
 
     def test_backend_importpath_wrong_path(self):
         with pytest.raises(ImportError):
-            ThreadedBackend(
-                backend='time_execution.backends.wrong_path.NewBackend',
-            )
+            ThreadedBackend(backend='time_execution.backends.wrong_path.NewBackend')
 
     def test_backend_class(self):
-        backend = ThreadedBackend(
-            backend=elasticsearch.ElasticsearchBackend
-        )
+        backend = ThreadedBackend(backend=elasticsearch.ElasticsearchBackend)
 
         assert isinstance(backend.backend, elasticsearch.ElasticsearchBackend)

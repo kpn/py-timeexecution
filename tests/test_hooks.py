@@ -182,8 +182,7 @@ class TestTimeExecution:
         def asserts(name, **data):
             assert data['test_key'] == 'test value'
 
-        with settings(backends=[AssertBackend(asserts)],
-                      hooks=[test_args, test_metadata]):
+        with settings(backends=[AssertBackend(asserts)], hooks=[test_args, test_metadata]):
             go()
 
     def test_hook_exception(self):
@@ -203,8 +202,7 @@ class TestTimeExecution:
         def go():
             raise TimeExecutionException(message)
 
-        with settings(backends=[AssertBackend(asserts)],
-                      hooks=[exception_hook]):
+        with settings(backends=[AssertBackend(asserts)], hooks=[exception_hook]):
             with pytest.raises(TimeExecutionException):
                 go()
 
@@ -226,8 +224,7 @@ class TestTimeExecution:
         def go():
             raise TimeExecutionException(message, True)
 
-        with settings(backends=[AssertBackend(asserts)],
-                      hooks=[exception_hook]):
+        with settings(backends=[AssertBackend(asserts)], hooks=[exception_hook]):
             with pytest.raises(TimeExecutionException):
                 go()
 

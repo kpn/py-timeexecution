@@ -1,3 +1,6 @@
 # Additional packages
 -r requirements/requirements-base.txt
+-r requirements/requirements-elasticsearch.txt
+-r requirements/requirements-influxdb.txt
+-r requirements/requirements-kafka.txt
 -r requirements/requirements-testing.txt

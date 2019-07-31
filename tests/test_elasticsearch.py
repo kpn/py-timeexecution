@@ -11,7 +11,6 @@ from time_execution.backends.elasticsearch import ElasticsearchBackend
 
 
 class TestConnectionErrors(TestBaseBackend):
-
     @mock.patch('time_execution.backends.elasticsearch.logger')
     def test_error_resilience(self, mocked_logger):
         backend = ElasticsearchBackend(hosts=['non-existant-domain'])
@@ -23,7 +22,6 @@ class TestConnectionErrors(TestBaseBackend):
 
 
 class ElasticTestMixin(object):
-
     @staticmethod
     def _clear(backend):
         backend.client.indices.delete(backend.index, ignore=404)
@@ -32,14 +30,7 @@ class ElasticTestMixin(object):
     @staticmethod
     def _query_backend(backend, name):
         backend.client.indices.refresh(backend.get_index())
-        metrics = backend.client.search(
-            index=backend.get_index(),
-            body={
-                "query": {
-                    "term": {"name": name}
-                },
-            }
-        )
+        metrics = backend.client.search(index=backend.get_index(), body={"query": {"term": {"name": name}}})
         return metrics
 
 
@@ -47,10 +38,7 @@ class TestTimeExecution(TestBaseBackend):
     def setUp(self):
         super(TestTimeExecution, self).setUp()
 
-        self.backend = ElasticsearchBackend(
-            'elasticsearch',
-            index='unittest',
-        )
+        self.backend = ElasticsearchBackend('elasticsearch', index='unittest')
         settings.configure(backends=[self.backend])
         self._clear()
 
@@ -94,7 +82,6 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(metrics['hits']['total'], 1)
 
     def test_hook(self):
-
         def test_args(**kwargs):
             self.assertIn('response', kwargs)
             self.assertIn('exception', kwargs)
@@ -114,8 +101,7 @@ class TestTimeExecution(TestBaseBackend):
 
         transport_error = TransportError('mocked error')
         es_index_error_ctx = mock.patch(
-            'time_execution.backends.elasticsearch.Elasticsearch.index',
-            side_effect=transport_error
+            'time_execution.backends.elasticsearch.Elasticsearch.index', side_effect=transport_error
         )
         frozen_time_ctx = freeze_time('2016-07-13')
 
@@ -123,12 +109,8 @@ class TestTimeExecution(TestBaseBackend):
             self.backend.write(name='test:metric', value=None)
             mocked_logger.warning.assert_called_once_with(
                 'writing metric %r failure %r',
-                {
-                    'timestamp': datetime(2016, 7, 13),
-                    'value': None,
-                    'name': 'test:metric'
-                },
-                transport_error
+                {'timestamp': datetime(2016, 7, 13), 'value': None, 'name': 'test:metric'},
+                transport_error,
             )
 
     def test_with_origin(self):
@@ -141,40 +123,21 @@ class TestTimeExecution(TestBaseBackend):
 
     def test_bulk_write(self):
         metrics = [
-            {
-                'name': 'metric.name',
-                'value': 1,
-                'timestamp': 1,
-            },
-            {
-                'name': 'metric.name',
-                'value': 2,
-                'timestamp': 2,
-            },
-            {
-                'name': 'metric.name',
-                'value': 3,
-                'timestamp': 3,
-            }
+            {'name': 'metric.name', 'value': 1, 'timestamp': 1},
+            {'name': 'metric.name', 'value': 2, 'timestamp': 2},
+            {'name': 'metric.name', 'value': 3, 'timestamp': 3},
         ]
         self.backend.bulk_write(metrics)
         query_result = self._query_backend('metric.name')
-        self.assertEqual(
-            len(metrics),
-            query_result['hits']['total']
-        )
+        self.assertEqual(len(metrics), query_result['hits']['total'])
 
     @mock.patch('time_execution.backends.elasticsearch.logger')
     def test_bulk_write_error(self, mocked_logger):
         transport_error = TransportError('mocked error')
         es_index_error_ctx = mock.patch(
-            'time_execution.backends.elasticsearch.Elasticsearch.bulk',
-            side_effect=transport_error
+            'time_execution.backends.elasticsearch.Elasticsearch.bulk', side_effect=transport_error
         )
         metrics = [1, 2, 3]
         with es_index_error_ctx:
             self.backend.bulk_write(metrics)
-            mocked_logger.warning.assert_called_once_with(
-                'bulk_write metrics %r failure %r',
-                metrics,
-                transport_error)
+            mocked_logger.warning.assert_called_once_with('bulk_write metrics %r failure %r', metrics, transport_error)

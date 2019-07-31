@@ -17,11 +17,7 @@ warnings.simplefilter('once', HookDeprecatedWarning)
 SHORT_HOSTNAME = socket.gethostname()
 
 settings = Settings()
-settings.configure(
-    backends=[],
-    hooks=[],
-    duration_field='value'
-)
+settings.configure(backends=[], hooks=[], duration_field='value')
 
 
 def write_metric(name, **metric):
@@ -35,13 +31,18 @@ def _apply_hooks(hooks, response, exception, metric, func, func_args, func_kwarg
         # backward compatibility with old hooks
         try:
             hook_result = hook(
-                response=response, exception=exception, metric=metric, func=func, func_args=func_args,
-                func_kwargs=func_kwargs
+                response=response,
+                exception=exception,
+                metric=metric,
+                func=func,
+                func_args=func_args,
+                func_kwargs=func_kwargs,
             )
         except TypeError:
             warnings.warn(
                 "Hook %s is outdated. Update interface by adding one more argument `func` in it." % hook.__name__,
-                HookDeprecatedWarning)
+                HookDeprecatedWarning,
+            )
             hook_result = hook(
                 response=response, exception=exception, metric=metric, func_args=func_args, func_kwargs=func_kwargs
             )
@@ -52,7 +53,6 @@ def _apply_hooks(hooks, response, exception, metric, func, func_args, func_kwarg
 
 
 class time_execution(Decorator):
-
     def __init__(self, func=None, **params):
         self.start_time = None
         super(time_execution, self).__init__(func, **params)
@@ -63,11 +63,7 @@ class time_execution(Decorator):
     def after(self):
         duration = round(time.time() - self.start_time, 3) * 1000
 
-        metric = {
-            'name': self.fqn,
-            settings.duration_field: duration,
-            'hostname': SHORT_HOSTNAME,
-        }
+        metric = {'name': self.fqn, settings.duration_field: duration, 'hostname': SHORT_HOSTNAME}
 
         origin = getattr(settings, 'origin', None)
         if origin:
@@ -88,7 +84,7 @@ class time_execution(Decorator):
             metric=metric,
             func=self.func,
             func_args=self.args,
-            func_kwargs=self.kwargs
+            func_kwargs=self.kwargs,
         )
 
         metric.update(metadata)
