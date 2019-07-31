@@ -8,7 +8,7 @@ from kafka.errors import KafkaTimeoutError, NoBrokersAvailable
 from time_execution.backends.base import BaseMetricsBackend
 from time_execution.serializer import JSONSerializer
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class KafkaBackend(BaseMetricsBackend):

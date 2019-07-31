@@ -7,7 +7,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import TransportError
 from time_execution.backends.base import BaseMetricsBackend
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class ElasticsearchBackend(BaseMetricsBackend):
