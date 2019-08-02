@@ -13,21 +13,6 @@ services:
     image: elasticsearch:5
     ports:
       - "9200:9200"
-  kibana:
-    image: kibana:5
-    ports:
-      - "5601:5601"
-    links:
-      - elasticsearch
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    links:
-      - influx
-      - elasticsearch
   zookeeper:
       image: confluentinc/cp-zookeeper:5.0.0
       environment:

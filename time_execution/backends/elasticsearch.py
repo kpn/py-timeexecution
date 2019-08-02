@@ -11,8 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class ElasticsearchBackend(BaseMetricsBackend):
-    def __init__(self, hosts=None, index="metrics", doc_type="metric",
-                 index_pattern="{index}-{date:%Y.%m.%d}", *args, **kwargs):
+    def __init__(
+        self, hosts=None, index="metrics", doc_type="metric", index_pattern="{index}-{date:%Y.%m.%d}", *args, **kwargs
+    ):
         # Assign these in the backend as they are needed when writing metrics
         # to elasticsearch
         self.index = index
@@ -46,42 +47,20 @@ class ElasticsearchBackend(BaseMetricsBackend):
                 "mappings": {
                     self.doc_type: {
                         "dynamic_templates": [
-                            {
-                                "strings": {
-                                    "mapping": {
-                                        "type": "keyword"
-                                    },
-                                    "match_mapping_type": "string"
-                                }
-                            }
+                            {"strings": {"mapping": {"type": "keyword"}, "match_mapping_type": "string"}}
                         ],
-                        "_source": {
-                            "enabled": True
-                        },
+                        "_source": {"enabled": True},
                         "properties": {
-                            "name": {
-                                "type": "keyword"
-                            },
-                            "timestamp": {
-                                "type": "date"
-                            },
-                            "hostname": {
-                                "type": "keyword"
-                            },
-                            "value": {
-                                "type": "float"
-                            },
-                            "origin": {
-                                "type": "keyword"
-                            },
-                        }
-                    },
+                            "name": {"type": "keyword"},
+                            "timestamp": {"type": "date"},
+                            "hostname": {"type": "keyword"},
+                            "value": {"type": "float"},
+                            "origin": {"type": "keyword"},
+                        },
+                    }
                 },
-                "settings": {
-                    "number_of_shards": "1",
-                    "number_of_replicas": "1",
-                },
-            }
+                "settings": {"number_of_shards": "1", "number_of_replicas": "1"},
+            },
         )
 
     def write(self, name, **data):
@@ -98,12 +77,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
             data["timestamp"] = datetime.utcnow()
 
         try:
-            self.client.index(
-                index=self.get_index(),
-                doc_type=self.doc_type,
-                id=None,
-                body=data
-            )
+            self.client.index(index=self.get_index(), doc_type=self.doc_type, id=None, body=data)
         except TransportError as exc:
             logger.warning('writing metric %r failure %r', data, exc)
 

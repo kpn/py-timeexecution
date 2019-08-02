@@ -21,7 +21,6 @@ def random_string(length):
 
 
 class TestConnectionErrors(unittest.TestCase):
-
     @mock.patch('time_execution.backends.kafka.logger')
     def test_error_resilience(self, mocked_logger):
         backend = KafkaBackend(hosts=['non-existant-domain'], topic='prod')
@@ -43,8 +42,7 @@ class TestTimeExecution(unittest.TestCase):
 
     def _query_backend(self):
         consumer = KafkaConsumer(
-            bootstrap_servers=KAFKA_HOST,
-            value_deserializer=lambda v: JSONSerializer().loads(v.decode('utf-8')),
+            bootstrap_servers=KAFKA_HOST, value_deserializer=lambda v: JSONSerializer().loads(v.decode('utf-8'))
         )
 
         tp = TopicPartition(self.topic, 0)
@@ -89,7 +87,6 @@ class TestTimeExecution(unittest.TestCase):
         assert len([m for m in metrics if m.value['name'] == get_fqn(Dummy().go)]) == 1
 
     def test_hook(self):
-
         def test_args(**kwargs):
             self.assertIn('response', kwargs)
             self.assertIn('exception', kwargs)
@@ -114,35 +111,19 @@ class TestTimeExecution(unittest.TestCase):
 
     def test_bulk_write(self):
         metrics = [
-            {
-                'name': 'metric.name',
-                'value': 1,
-                'timestamp': 1,
-            },
-            {
-                'name': 'metric.name',
-                'value': 2,
-                'timestamp': 2,
-            },
-            {
-                'name': 'metric.name',
-                'value': 3,
-                'timestamp': 3,
-            }
+            {'name': 'metric.name', 'value': 1, 'timestamp': 1},
+            {'name': 'metric.name', 'value': 2, 'timestamp': 2},
+            {'name': 'metric.name', 'value': 3, 'timestamp': 3},
         ]
         self.backend.bulk_write(metrics)
         query_result = self._query_backend()
-        self.assertEqual(
-            len(metrics),
-            len(query_result)
-        )
+        self.assertEqual(len(metrics), len(query_result))
 
     @mock.patch('time_execution.backends.kafka.logger')
     def test_write_error_warning(self, mocked_logger):
         transport_error = KafkaTimeoutError('mocked error')
         es_index_error_ctx = mock.patch(
-            'time_execution.backends.kafka.KafkaProducer.send',
-            side_effect=transport_error
+            'time_execution.backends.kafka.KafkaProducer.send', side_effect=transport_error
         )
         frozen_time_ctx = freeze_time('2016-07-13')
 
@@ -150,25 +131,17 @@ class TestTimeExecution(unittest.TestCase):
             self.backend.write(name='test:metric', value=None)
             mocked_logger.warning.assert_called_once_with(
                 'writing metric %r failure %r',
-                {
-                    'timestamp': datetime(2016, 7, 13),
-                    'value': None,
-                    'name': 'test:metric'
-                },
-                transport_error
+                {'timestamp': datetime(2016, 7, 13), 'value': None, 'name': 'test:metric'},
+                transport_error,
             )
 
     @mock.patch('time_execution.backends.kafka.logger')
     def test_bulk_write_error(self, mocked_logger):
         transport_error = KafkaTimeoutError('mocked error')
         es_index_error_ctx = mock.patch(
-            'time_execution.backends.kafka.KafkaProducer.send',
-            side_effect=transport_error
+            'time_execution.backends.kafka.KafkaProducer.send', side_effect=transport_error
         )
         metrics = [1, 2, 3]
         with es_index_error_ctx:
             self.backend.bulk_write(metrics)
-            mocked_logger.warning.assert_called_once_with(
-                'bulk_write metrics %r failure %r',
-                metrics,
-                transport_error)
+            mocked_logger.warning.assert_called_once_with('bulk_write metrics %r failure %r', metrics, transport_error)

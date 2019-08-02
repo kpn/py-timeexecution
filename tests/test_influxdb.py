@@ -11,11 +11,7 @@ class TestTimeExecution(TestBaseBackend):
         super(TestTimeExecution, self).setUp()
 
         self.database = 'unittest'
-        self.backend = InfluxBackend(
-            host='influx',
-            database=self.database,
-            use_udp=False
-        )
+        self.backend = InfluxBackend(host='influx', database=self.database, use_udp=False)
 
         try:
             self.backend.client.create_database(self.database)
@@ -65,7 +61,6 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(len(metrics), 1)
 
     def test_hook(self):
-
         def test_args(**kwargs):
             self.assertIn('response', kwargs)
             self.assertIn('exception', kwargs)

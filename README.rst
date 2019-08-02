@@ -19,6 +19,7 @@ Time Execution
 .. image:: https://img.shields.io/pypi/l/timeexecution.svg
     :target: https://pypi.org/project/timeexecution
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 This package is designed to record application metrics into specific backends.
 With the help of Grafana_ or Kibana_ you can easily use these metrics to create meaningful monitoring dashboards.

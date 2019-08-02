@@ -1,57 +1,57 @@
 # This Makefile requires the following commands to be available:
 # * virtualenv
-# * python2.7
+# * python3.6
 # * docker
 # * docker-compose
 
-DEPS:=requirements.txt
 DOCKER_COMPOSE:=$(shell which docker-compose)
 
-PIP:="venv/bin/pip"
-CMD_FROM_VENV:=". venv/bin/activate; which"
-TOX=$(shell "$(CMD_FROM_VENV)" "tox")
-PYTHON=$(shell "$(CMD_FROM_VENV)" "python")
-TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
 
-.PHONY: clean docsclean pyclean test lint isort docs docker setup.py requirements
-
-tox: clean requirements
-	$(TOX)
-
+.PHONY: pyclean
 pyclean:
-	@find . -name *.pyc -delete
-	@rm -rf *.egg-info build
-	@rm -rf coverage.xml .coverage
+	find . -name "*.pyc" -delete
+	rm -rf *.egg-info build
+	rm -rf coverage.xml .coverage
 
+.PHONY: docsclean
 docsclean:
-	@rm -fr docs/_build/
-	@rm -fr docs/api/
+	rm -rf docs/_build/
+	rm -rf docs/api/
 
+.PHONY: clean
 clean: pyclean docsclean
 	@rm -rf venv
 	@rm -rf .tox
 
 venv:
-	@python3.6 -m venv venv
-	@$(PIP) install -U "pip>=7.0" -q
-	@$(PIP) install -r $(DEPS)
+	python3.6 -m venv venv
+	venv/bin/pip install -U pip -q
+	venv/bin/pip install -r requirements.txt
 
+.PHONY: test
 test: venv pyclean
-	$(TOX) -e $(TOX_PY_LIST)
+	venv/bin/tox
 
 test/%: venv pyclean
-	$(TOX) -e $(TOX_PY_LIST) -- $*
+	venv/bin/tox -- $*
 
+.PHONY: lint
 lint: venv
-	@$(TOX) -e lint
-	@$(TOX) -e isort-check
+	venv/bin/flake8 time_execution tests
+	venv/bin/isort -rc -c time_execution tests
+	venv/bin/black --check time_execution tests
 
-isort: venv
-	@$(TOX) -e isort-fix
+.PHONY: format
+format: venv
+	venv/bin/isort -rc time_execution tests
+	venv/bin/black --verbose time_execution tests
 
+.PHONY: docs
 docs: venv docsclean
-	@$(TOX) -e docs
+	venv/bin/python docs/apidoc.py -T -M -d 2 -o docs/api time_execution
+	venv/bin/sphinx-build -W -b html docs docs/_build/html
 
+.PHONY: docker
 docker:
 	$(DOCKER_COMPOSE) run --rm --service-ports app bash
 
@@ -59,13 +59,18 @@ docker/%:
 	$(DOCKER_COMPOSE) run --rm --service-ports app make $*
 
 setup.py: venv
-	@$(PYTHON) setup_gen.py
-	@$(PYTHON) setup.py check --restructuredtext
+	venv/bin/python setup_gen.py
+	venv/bin/python setup.py sdist
+	venv/bin/twine check dist/*
 
+.PHONY: publish
 publish: setup.py
-	@$(PYTHON) setup.py sdist upload
+	-rm setup.py
+	$(MAKE) setup.py
+	venv/bin/twine upload dist/*
 
-build: clean venv tox setup.py
+.PHONY: build
+build: clean venv lint test setup.py
 
 changelog:
-	gitchangelog
+	venv/bin/gitchangelog

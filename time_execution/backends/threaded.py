@@ -33,9 +33,17 @@ def import_from_string(val):
 
 
 class ThreadedBackend(BaseMetricsBackend):
-
-    def __init__(self, backend, backend_args=None, backend_kwargs=None,
-                 queue_maxsize=1000, queue_timeout=0.5, worker_limit=None, bulk_size=50, bulk_timeout=1):
+    def __init__(
+        self,
+        backend,
+        backend_args=None,
+        backend_kwargs=None,
+        queue_maxsize=1000,
+        queue_timeout=0.5,
+        worker_limit=None,
+        bulk_size=50,
+        bulk_timeout=1,
+    ):
         if backend_args is None:
             backend_args = tuple()
         if backend_kwargs is None:
@@ -66,10 +74,7 @@ class ThreadedBackend(BaseMetricsBackend):
         if self.thread:
             return
         self.fetched_items = 0
-        self.thread = threading.Thread(
-            target=self.worker,
-            name="TimeExecutionThread"
-        )
+        self.thread = threading.Thread(target=self.worker, name="TimeExecutionThread")
         self.thread.daemon = False
         self.thread.start()
 

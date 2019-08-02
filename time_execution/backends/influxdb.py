@@ -10,8 +10,4 @@ class InfluxBackend(BaseMetricsBackend):
         self.client = InfluxDBClient(**kwargs)
 
     def write(self, name, **data):
-        self.client.write_points([{
-            "name": name,
-            "columns": list(data.keys()),
-            "points": [list(data.values())]
-        }])
+        self.client.write_points([{"name": name, "columns": list(data.keys()), "points": [list(data.values())]}])
