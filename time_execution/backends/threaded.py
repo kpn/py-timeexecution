@@ -16,7 +16,7 @@ except ImportError:
     from queue import Empty, Full
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def import_from_string(val):
