@@ -253,3 +253,26 @@ class TestTimeExecution:
 
         with settings(hooks=[hook]):
             go(param1=param)
+
+    def test_hook_use_resource_uri(self):
+        resource = '/get'
+
+        @time_execution(use_resource_uri=True)
+        def run(resource):
+            return '200 OK'
+
+        def hook(response, exception, metric, func_args, func_kwargs):
+            assert metric.get('resource') == resource
+
+        with settings(hooks=[hook]):
+            run(resource=resource)
+
+        @time_execution(use_resource_uri=False)
+        def run(resource):
+            return '200 OK'
+
+        def hook(response, exception, metric, func_args, func_kwargs):
+            assert metric.get('resource') is None
+
+        with settings(hooks=[hook]):
+            run(resource=resource)

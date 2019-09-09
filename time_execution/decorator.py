@@ -69,6 +69,10 @@ class time_execution(Decorator):
         if origin:
             metric['origin'] = origin
 
+        use_resource_uri = self.params.get('use_resource_uri', False)
+        if use_resource_uri:
+            metric['resource'] = self.kwargs.get('resource', False)
+
         hooks = self.params.get('extra_hooks', [])
         disable_default_hooks = self.params.get('disable_default_hooks', False)
 
