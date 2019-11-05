@@ -13,13 +13,8 @@ pyclean:
 	rm -rf *.egg-info build
 	rm -rf coverage.xml .coverage
 
-.PHONY: docsclean
-docsclean:
-	rm -rf docs/_build/
-	rm -rf docs/api/
-
 .PHONY: clean
-clean: pyclean docsclean
+clean: pyclean
 	@rm -rf venv
 	@rm -rf .tox
 
@@ -45,11 +40,6 @@ lint: venv
 format: venv
 	venv/bin/isort -rc time_execution tests
 	venv/bin/black --verbose time_execution tests
-
-.PHONY: docs
-docs: venv docsclean
-	venv/bin/python docs/apidoc.py -T -M -d 2 -o docs/api time_execution
-	venv/bin/sphinx-build -W -b html docs docs/_build/html
 
 .PHONY: docker
 docker:
