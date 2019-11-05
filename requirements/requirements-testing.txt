@@ -13,11 +13,6 @@ pytest
 pytest-asyncio; python_version >= '3.5'
 pytest-cov
 
-# docs
-sphinx
-sphinxcontrib-plantuml
-sphinx_rtd_theme
-
 # gitchangelog
 gitchangelog
 pystache
