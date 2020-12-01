@@ -7,17 +7,17 @@ import warnings
 
 import six
 from fqn_decorators import Decorator
+from fqn_decorators.asynchronous import AsyncDecorator
 from pkgsettings import Settings
 
-from .constants import PY_35_GT
 from .deprecation import HookDeprecatedWarning
 
-warnings.simplefilter('once', HookDeprecatedWarning)
+warnings.simplefilter("once", HookDeprecatedWarning)
 
 SHORT_HOSTNAME = socket.gethostname()
 
 settings = Settings()
-settings.configure(backends=[], hooks=[], duration_field='value')
+settings.configure(backends=[], hooks=[], duration_field="value")
 
 
 def write_metric(name, **metric):
@@ -63,14 +63,14 @@ class time_execution(Decorator):
     def after(self):
         duration = round(time.time() - self.start_time, 3) * 1000
 
-        metric = {'name': self.fqn, settings.duration_field: duration, 'hostname': SHORT_HOSTNAME}
+        metric = {"name": self.fqn, settings.duration_field: duration, "hostname": SHORT_HOSTNAME}
 
-        origin = getattr(settings, 'origin', None)
+        origin = getattr(settings, "origin", None)
         if origin:
-            metric['origin'] = origin
+            metric["origin"] = origin
 
-        hooks = self.params.get('extra_hooks', [])
-        disable_default_hooks = self.params.get('disable_default_hooks', False)
+        hooks = self.params.get("extra_hooks", [])
+        disable_default_hooks = self.params.get("disable_default_hooks", False)
 
         if not disable_default_hooks:
             hooks = settings.hooks + hooks
@@ -99,8 +99,5 @@ class time_execution(Decorator):
                 return e
 
 
-if PY_35_GT:
-    from fqn_decorators.asynchronous import AsyncDecorator  # isort:skip
-
-    class time_execution_async(AsyncDecorator, time_execution):
-        pass
+class time_execution_async(AsyncDecorator, time_execution):
+    pass

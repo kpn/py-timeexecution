@@ -1,66 +1,74 @@
 # This Makefile requires the following commands to be available:
-# * virtualenv
-# * python3.6
+# * python3.7
 # * docker
-# * docker-compose
 
-DOCKER_COMPOSE:=$(shell which docker-compose)
-
+SRC:=time_execution tests setup.py
 
 .PHONY: pyclean
 pyclean:
-	find . -name "*.pyc" -delete
-	rm -rf *.egg-info build
-	rm -rf coverage.xml .coverage
+	-find . -name "*.pyc" -delete
+	-rm -rf *.egg-info build
+	-rm -rf coverage*.xml .coverage
 
 .PHONY: clean
 clean: pyclean
-	@rm -rf venv
-	@rm -rf .tox
+	-rm -rf venv
+	-rm -rf .tox
 
+venv: PYTHON?=python3.7
 venv:
-	python3.6 -m venv venv
-	venv/bin/pip install -U pip -q
-	venv/bin/pip install -r requirements.txt
+	$(PYTHON) -m venv venv
+	venv/bin/pip install -U "pip>=7.0" -q
+	venv/bin/pip install -r requirements.txt '.[all]'
 
-.PHONY: test
-test: venv pyclean
-	venv/bin/tox
-
-test/%: venv pyclean
-	venv/bin/tox -- $*
-
+## Code style
 .PHONY: lint
-lint: venv
-	venv/bin/flake8 time_execution tests
-	venv/bin/isort -rc -c time_execution tests
-	venv/bin/black --check time_execution tests
+lint: lint/black lint/flake8 lint/isort lint/mypy
+
+.PHONY: lint/black
+lint/black: venv
+	venv/bin/black --diff --check $(SRC)
+
+.PHONY: lint/flake8
+lint/flake8: venv
+	venv/bin/flake8 $(SRC)
+
+.PHONY: lint/isort
+lint/isort: venv
+	venv/bin/isort --diff --check $(SRC)
+
+.PHONY: lint/mypy
+lint/mypy: venv
+	venv/bin/mypy $(SRC)
 
 .PHONY: format
-format: venv
-	venv/bin/isort -rc time_execution tests
-	venv/bin/black --verbose time_execution tests
+format: format/isort format/black
 
-.PHONY: docker
-docker:
-	$(DOCKER_COMPOSE) run --rm --service-ports app bash
+.PHONY: format/isort
+format/isort: venv
+	venv/bin/isort $(SRC)
 
-docker/%:
-	$(DOCKER_COMPOSE) run --rm --service-ports app make $*
+.PHONY: format/black
+format/black: venv
+	venv/bin/black $(SRC)
 
-setup.py: venv
-	venv/bin/python setup_gen.py
-	venv/bin/python setup.py sdist
-	venv/bin/twine check dist/*
+## Tests
+.PHONY: unittests
+unittests: TOX_ENV?=ALL
+unittests: TOX_EXTRA_PARAMS?=""
+unittests: venv
+	venv/bin/tox -e $(TOX_ENV) $(TOX_EXTRA_PARAMS)
 
-.PHONY: publish
-publish: setup.py
-	-rm setup.py
-	$(MAKE) setup.py
-	venv/bin/twine upload dist/*
+.PHONY: test
+test: pyclean unittests
 
-.PHONY: build
-build: clean venv lint test setup.py
-
+## Distribution
+.PHONY: changelog
 changelog:
 	venv/bin/gitchangelog
+
+.PHONY: build
+build: venv
+	-rm -rf dist build
+	venv/bin/python setup.py sdist bdist_wheel
+	venv/bin/twine check dist/*

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import TransportError
+
 from time_execution.backends.base import BaseMetricsBackend
 
 logger = logging.getLogger(__name__)
@@ -27,11 +28,11 @@ class ElasticsearchBackend(BaseMetricsBackend):
         try:
             self._setup_index()
         except TransportError as exc:
-            logger.error('index setup error %r', exc)
+            logger.error("index setup error %r", exc)
         try:
             self._setup_mapping()
         except TransportError as exc:
-            logger.error('mapping setup error %r', exc)
+            logger.error("mapping setup error %r", exc)
 
     def get_index(self):
         return self.index_pattern.format(index=self.index, date=datetime.now())
@@ -79,7 +80,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
         try:
             self.client.index(index=self.get_index(), doc_type=self.doc_type, id=None, body=data)
         except TransportError as exc:
-            logger.warning('writing metric %r failure %r', data, exc)
+            logger.warning("writing metric %r failure %r", data, exc)
 
     def bulk_write(self, metrics):
         """
@@ -91,9 +92,9 @@ class ElasticsearchBackend(BaseMetricsBackend):
         actions = []
         index = self.get_index()
         for metric in metrics:
-            actions.append({'index': {'_index': index, '_type': self.doc_type}})
+            actions.append({"index": {"_index": index, "_type": self.doc_type}})
             actions.append(metric)
         try:
             self.client.bulk(actions)
         except TransportError as exc:
-            logger.warning('bulk_write metrics %r failure %r', metrics, exc)
+            logger.warning("bulk_write metrics %r failure %r", metrics, exc)

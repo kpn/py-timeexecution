@@ -1,13 +1,38 @@
 # Changelog
 
 
-## (unreleased)
+## 5.0.0 (2020-12-01)
+
+### Other
+
+* BREAK: drop old python versions, refactor CI. [Denis Kovalev]
+
+
+## 4.1.2 (2019-11-05)
+
+### Fixes
+
+* FIX: update the version of fqn decorators to enable time async parameterization. [Denis Kovalev]
+
+
+## 4.1.1 (2019-08-02)
+
+### Fixes
+
+* FIX: improve logging. [kammala]
 
 ### Optimizations
+
+* OPT: use black and optimize build process. [kammala]
+
+  - move test unrelated environment out of tox
+  - use black and change isort settings accordingly
+  - unpin flake8
 
 * OPT Added changelog using gitchangelog and makefile target. [Ricardo Alves]
 
 * OPT Improved readme with addtional badges and info regarding example usage with ElasticsSearch. [Ricardo Alves]
+
 
 
 ## 4.1.0 (2019-05-10)

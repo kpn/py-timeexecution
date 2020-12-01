@@ -209,7 +209,7 @@ For example:
     loop.run_until_complete(hello())
 
 
-.. _usage-hooks: 
+.. _usage-hooks:
 
 Hooks
 -----
@@ -343,20 +343,16 @@ Contribute
 
 You have something to contribute? Great! There are a few things that may come in handy.
 
-Testing in this project is done via docker. There is a docker-compose to easily
-get all the required containers up and running.
+Testing in this project is done via tox with the use of docker.
 
 There is a Makefile with a few targets that we use often:
 
 - ``make test``
-- ``make isort``
+- ``make format``
 - ``make lint``
 - ``make build``
-- ``make setup.py``
 
-All of these make targets can be prefixed by ``docker/``. This will execute
-the target inside the docker container instead of on your local machine.
-For example ``make docker/build``.
+``make test`` command will run tests for the python versions specified in ``tox.ini`` spinning up all necessary services via docker.
 
 
 .. _Grafana: http://grafana.org/

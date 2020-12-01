@@ -5,6 +5,7 @@ from datetime import datetime
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaTimeoutError, NoBrokersAvailable
+
 from time_execution.backends.base import BaseMetricsBackend
 from time_execution.serializer import JSONSerializer
 
@@ -29,7 +30,7 @@ class KafkaBackend(BaseMetricsBackend):
         try:
             self.producer
         except NoBrokersAvailable as exc:
-            logger.error('client setup error %r', exc)
+            logger.error("client setup error %r", exc)
 
     @property
     def producer(self):
@@ -41,8 +42,8 @@ class KafkaBackend(BaseMetricsBackend):
 
         self._producer = KafkaProducer(
             bootstrap_servers=self.hosts,
-            value_serializer=lambda v: self._serializer_class().dumps(v).encode('utf-8'),
-            **self._kwargs
+            value_serializer=lambda v: self._serializer_class().dumps(v).encode("utf-8"),
+            **self._kwargs,
         )
 
         return self._producer
@@ -64,7 +65,7 @@ class KafkaBackend(BaseMetricsBackend):
             self.producer.send(topic=self.topic, value=data)
             self.producer.flush()
         except (KafkaTimeoutError, NoBrokersAvailable) as exc:
-            logger.warning('writing metric %r failure %r', data, exc)
+            logger.warning("writing metric %r failure %r", data, exc)
 
     def bulk_write(self, metrics):
         """
@@ -78,4 +79,4 @@ class KafkaBackend(BaseMetricsBackend):
                 self.producer.send(self.topic, metric)
             self.producer.flush()
         except (KafkaTimeoutError, NoBrokersAvailable) as exc:
-            logger.warning('bulk_write metrics %r failure %r', metrics, exc)
+            logger.warning("bulk_write metrics %r failure %r", metrics, exc)

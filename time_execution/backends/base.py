@@ -3,7 +3,7 @@ Base metrics backend
 """
 
 
-class BaseMetricsBackend(object):
+class BaseMetricsBackend:
     def write(self, name, **data):
         raise NotImplementedError
 

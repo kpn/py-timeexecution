@@ -1,5 +1,6 @@
 import pytest
 from fqn_decorators import get_fqn
+
 from tests.conftest import go
 from time_execution import settings, time_execution
 from time_execution.backends.base import BaseMetricsBackend
@@ -25,11 +26,11 @@ class CollectorBackend(BaseMetricsBackend):
 
 
 def local_hook(**kwargs):
-    return dict(local_hook_key='local hook value')
+    return dict(local_hook_key="local hook value")
 
 
 def global_hook(**kwargs):
-    return dict(global_hook_key='global hook value')
+    return dict(global_hook_key="global hook value")
 
 
 class TestTimeExecution:
@@ -147,10 +148,10 @@ class TestTimeExecution:
 
     def test_old_hooks(self):
         def old_hook(response, exception, metric, func_args, func_kwargs):
-            return dict(old_hook='old_hook')
+            return dict(old_hook="old_hook")
 
         def new_hook(response, exception, metric, func, func_args, func_kwargs):
-            return dict(new_hook='new_hook', attribute_from_class=func.__self__.attr)
+            return dict(new_hook="new_hook", attribute_from_class=func.__self__.attr)
 
         class Class:
             attr = 1
@@ -171,22 +172,22 @@ class TestTimeExecution:
 
     def test_hook(self):
         def test_args(**kwargs):
-            assert 'response' in kwargs
-            assert 'exception' in kwargs
-            assert 'metric' in kwargs
+            assert "response" in kwargs
+            assert "exception" in kwargs
+            assert "metric" in kwargs
             return dict()
 
         def test_metadata(*args, **kwargs):
-            return dict(test_key='test value')
+            return dict(test_key="test value")
 
         def asserts(name, **data):
-            assert data['test_key'] == 'test value'
+            assert data["test_key"] == "test value"
 
         with settings(backends=[AssertBackend(asserts)], hooks=[test_args, test_metadata]):
             go()
 
     def test_hook_exception(self):
-        message = 'exception message'
+        message = "exception message"
 
         class TimeExecutionException(Exception):
             pass
@@ -196,7 +197,7 @@ class TestTimeExecution:
             return dict(exception_message=str(exception))
 
         def asserts(name, **data):
-            assert data['exception_message'] == message
+            assert data["exception_message"] == message
 
         @time_execution
         def go():
@@ -207,7 +208,7 @@ class TestTimeExecution:
                 go()
 
     def test_hook_exception_args(self):
-        message = 'exception message'
+        message = "exception message"
 
         class TimeExecutionException(Exception):
             def __init__(self, msg, required):
@@ -218,7 +219,7 @@ class TestTimeExecution:
             return dict(exception_message=str(exception))
 
         def asserts(name, **data):
-            assert data['exception_message'] == message
+            assert data["exception_message"] == message
 
         @time_execution
         def go():
@@ -229,27 +230,27 @@ class TestTimeExecution:
                 go()
 
     def test_hook_func_args(self):
-        param = 'foo'
+        param = "foo"
 
         @time_execution
         def go(param1):
-            return '200 OK'
+            return "200 OK"
 
-        def hook(response, exception, metric, func_args, func_kwargs):
+        def hook(response, exception, metric, func, func_args, func_kwargs):
             assert func_args[0] == param
 
         with settings(hooks=[hook]):
             go(param)
 
     def test_hook_func_kwargs(self):
-        param = 'foo'
+        param = "foo"
 
         @time_execution
         def go(param1):
-            return '200 OK'
+            return "200 OK"
 
-        def hook(response, exception, metric, func_args, func_kwargs):
-            assert func_kwargs['param1'] == param
+        def hook(response, exception, metric, func, func_args, func_kwargs):
+            assert func_kwargs["param1"] == param
 
         with settings(hooks=[hook]):
             go(param1=param)
