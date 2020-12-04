@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import time
 from datetime import datetime
 from multiprocessing import Process
@@ -7,6 +8,7 @@ from threading import Thread
 import mock
 import pytest
 from freezegun import freeze_time
+
 from tests.conftest import go
 from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
@@ -14,7 +16,7 @@ from time_execution.backends import elasticsearch, kafka
 from time_execution.backends.threaded import ThreadedBackend
 from time_execution.decorator import SHORT_HOSTNAME
 
-from .test_elasticsearch import ElasticTestMixin
+from .test_elasticsearch import ELASTICSEARCH_HOST, ElasticTestMixin
 
 
 class TestTimeExecution(TestBaseBackend):
@@ -27,8 +29,8 @@ class TestTimeExecution(TestBaseBackend):
 
         self.backend = ThreadedBackend(
             self.MockedBackendClass,
-            backend_args=('arg1', 'arg2'),
-            backend_kwargs=dict(key1='kwarg1', key2='kwarg2'),
+            backend_args=("arg1", "arg2"),
+            backend_kwargs=dict(key1="kwarg1", key2="kwarg2"),
             queue_maxsize=self.qsize,
             queue_timeout=self.qtimeout,
         )
@@ -52,7 +54,7 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(self.backend.thread.name, "TimeExecutionThread")
 
     def test_backend_args(self):
-        self.MockedBackendClass.assert_called_with('arg1', 'arg2', key1='kwarg1', key2='kwarg2')
+        self.MockedBackendClass.assert_called_with("arg1", "arg2", key1="kwarg1", key2="kwarg2")
         ThreadedBackend(self.MockedBackendClass)
         self.MockedBackendClass.assert_called_with()
 
@@ -69,7 +71,7 @@ class TestTimeExecution(TestBaseBackend):
         mocked_write = self.mocked_backend.bulk_write
         self.assertEqual(1, self.backend.fetched_items)
         mocked_write.assert_called_with(
-            [{'timestamp': now, 'hostname': SHORT_HOSTNAME, 'name': 'tests.conftest.go', 'value': 0.0}]
+            [{"timestamp": now, "hostname": SHORT_HOSTNAME, "name": "tests.conftest.go", "value": 0.0}]
         )
 
     def test_double_start(self):
@@ -82,7 +84,7 @@ class TestTimeExecution(TestBaseBackend):
         self.assertEqual(1, self.backend.fetched_items)
 
     def test_write_error(self):
-        self.mocked_backend.write.side_effect = RuntimeError('mocked')
+        self.mocked_backend.write.side_effect = RuntimeError("mocked")
         go()
         time.sleep(2 * self.qtimeout)
 
@@ -106,7 +108,7 @@ class TestTimeExecution(TestBaseBackend):
 
     def test_worker_sends_remainder(self):
         self.stop_worker()
-        self.mocked_backend.bulk_write.side_effect = RuntimeError('mock')
+        self.mocked_backend.bulk_write.side_effect = RuntimeError("mock")
         loops_count = 3
         self.assertTrue(loops_count < self.backend.bulk_size)
         for _ in range(loops_count):
@@ -123,12 +125,16 @@ class TestTimeExecution(TestBaseBackend):
     def test_worker_error(self):
         self.assertFalse(self.backend.thread is None)
         # simulate TypeError in queue.get
-        with mock.patch.object(self.backend._queue, 'get', side_effect=TypeError):
+        with mock.patch.object(self.backend._queue, "get", side_effect=TypeError):
             # ensure worker loop repeat
             time.sleep(2 * self.qtimeout)
         # assert thread stopped
         self.assertTrue(self.backend.thread is None)
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="multiprocessing.queues.Queue.qsize doesn't work on MacOS due to broken sem_getvalue()",
+    )
     def test_producer_in_another_process(self):
         # assure worker is stopped
         self.stop_worker()
@@ -145,7 +151,7 @@ class TestTimeExecution(TestBaseBackend):
         self.stop_worker()
         loops = 3
 
-        with mock.patch.object(self.backend, 'parent_thread', spec=Thread) as parent_thread:
+        with mock.patch.object(self.backend, "parent_thread", spec=Thread) as parent_thread:
             parent_thread.is_alive.return_value = False
 
             for _ in range(loops):
@@ -179,8 +185,8 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
         self.qtime = 0.1
         self.backend = ThreadedBackend(
             elasticsearch.ElasticsearchBackend,
-            backend_args=('elasticsearch',),
-            backend_kwargs=dict(index='threaded-metrics'),
+            backend_args=(ELASTICSEARCH_HOST,),
+            backend_kwargs=dict(index="threaded-metrics"),
             queue_timeout=self.qtime,
         )
         settings.configure(backends=[self.backend])
@@ -189,16 +195,16 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
     def test_write_method(self):
         go()
         time.sleep(2 * self.backend.bulk_timeout)
-        metrics = self._query_backend(self.backend.backend, go.fqn)
-        self.assertEqual(metrics['hits']['total'], 1)
+        metrics = self._query_backend(self.backend.backend, go.get_fqn())
+        self.assertEqual(metrics["hits"]["total"], 1)
 
 
 class TestSetupBackend:
     @pytest.mark.parametrize(
-        'backend_string, expected_class',
+        "backend_string, expected_class",
         (
-            ('time_execution.backends.elasticsearch.ElasticsearchBackend', elasticsearch.ElasticsearchBackend),
-            ('time_execution.backends.kafka.KafkaBackend', kafka.KafkaBackend),
+            ("time_execution.backends.elasticsearch.ElasticsearchBackend", elasticsearch.ElasticsearchBackend),
+            ("time_execution.backends.kafka.KafkaBackend", kafka.KafkaBackend),
         ),
     )
     def test_backend_importpath(self, backend_string, expected_class):
@@ -208,7 +214,7 @@ class TestSetupBackend:
 
     def test_backend_importpath_wrong_path(self):
         with pytest.raises(ImportError):
-            ThreadedBackend(backend='time_execution.backends.wrong_path.NewBackend')
+            ThreadedBackend(backend="time_execution.backends.wrong_path.NewBackend")
 
     def test_backend_class(self):
         backend = ThreadedBackend(backend=elasticsearch.ElasticsearchBackend)

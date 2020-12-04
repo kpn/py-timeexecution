@@ -14,7 +14,7 @@ class SerializationError(Exception):
     pass
 
 
-class JSONSerializer(object):
+class JSONSerializer:
     def default(self, data):
         if isinstance(data, (date, datetime)):
             return data.isoformat()
@@ -36,6 +36,6 @@ class JSONSerializer(object):
             return data
 
         try:
-            return json.dumps(data, default=self.default, ensure_ascii=False, separators=(',', ':'))
+            return json.dumps(data, default=self.default, ensure_ascii=False, separators=(",", ":"))
         except (ValueError, TypeError) as e:
             raise SerializationError(data, e)

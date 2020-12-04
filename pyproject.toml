@@ -1,4 +1,29 @@
 [tool.black]
-line-length = 119
-target_version = ['py27', 'py36', 'py37']
-skip-string-normalization = true
+line-length = 120
+target_version = ["py36", "py37", "py38"]
+
+[tool.isort]
+combine_as_imports = true
+default_section = "THIRDPARTY"
+known_first_party = ["time_execution", "tests"]
+from_first = false
+include_trailing_comma = true
+length_sort = false
+multi_line_output = 3
+order_by_type = true
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+use_parentheses = true
+line_length = 120
+force_grid_wrap = 0
+ensure_newline_before_comments = true
+
+[tool.coverage.run]
+source = ["time_execution"]
+relative_files = true
+branch = true
+omit = ["tests/*"]
+
+[tool.setuptools_scm]
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]

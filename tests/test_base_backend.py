@@ -7,7 +7,7 @@ class TestBaseBackend(unittest.TestCase):
     def test_write_method(self):
         backend = BaseMetricsBackend()
         with self.assertRaises(NotImplementedError):
-            backend.write('test')
+            backend.write("test")
 
     def test_bulk_write(self):
         backend = BaseMetricsBackend()
