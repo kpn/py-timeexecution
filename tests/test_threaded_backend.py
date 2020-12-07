@@ -12,7 +12,7 @@ from freezegun import freeze_time
 from tests.conftest import go
 from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
-from time_execution.backends import elasticsearch, kafka
+from time_execution.backends import elasticsearch
 from time_execution.backends.threaded import ThreadedBackend
 from time_execution.decorator import SHORT_HOSTNAME
 
@@ -200,17 +200,10 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
 
 
 class TestSetupBackend:
-    @pytest.mark.parametrize(
-        "backend_string, expected_class",
-        (
-            ("time_execution.backends.elasticsearch.ElasticsearchBackend", elasticsearch.ElasticsearchBackend),
-            ("time_execution.backends.kafka.KafkaBackend", kafka.KafkaBackend),
-        ),
-    )
-    def test_backend_importpath(self, backend_string, expected_class):
-        backend = ThreadedBackend(backend=backend_string)
+    def test_backend_importpath(self):
+        backend = ThreadedBackend(backend="time_execution.backends.elasticsearch.ElasticsearchBackend")
 
-        assert isinstance(backend.backend, expected_class)
+        assert isinstance(backend.backend, elasticsearch.ElasticsearchBackend)
 
     def test_backend_importpath_wrong_path(self):
         with pytest.raises(ImportError):
