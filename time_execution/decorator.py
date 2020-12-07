@@ -4,11 +4,9 @@ Time Execution decorator
 import socket
 import time
 
-import six
 from fqn_decorators import Decorator
 from fqn_decorators.asynchronous import AsyncDecorator
 from pkgsettings import Settings
-
 
 SHORT_HOSTNAME = socket.gethostname()
 
@@ -78,11 +76,15 @@ class time_execution(Decorator):
 
     def get_exception(self):
         """Retrieve the exception"""
-        if self.exc_info:
-            try:
-                six.reraise(*self.exc_info)
-            except Exception as e:
-                return e
+        if self.exc_info is None:
+            return
+
+        exc_type, exc_value, exc_tb = self.exc_info
+        if exc_value is None:
+            exc_value = exc_type()
+        if exc_value.__traceback__ is not exc_tb:
+            return exc_value.with_traceback(exc_tb)
+        return exc_value
 
 
 class time_execution_async(AsyncDecorator, time_execution):

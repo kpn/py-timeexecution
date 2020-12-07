@@ -1,21 +1,12 @@
-from __future__ import absolute_import
-
 import datetime
 import logging
 import threading
 import time
 from importlib import import_module
 from multiprocessing import Queue
-
-import six
+from queue import Empty, Full
 
 from time_execution.backends.base import BaseMetricsBackend
-
-try:
-    from Queue import Empty, Full
-except ImportError:
-    from queue import Empty, Full
-
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +48,7 @@ class ThreadedBackend(BaseMetricsBackend):
         self.bulk_size = bulk_size
         self.bulk_timeout = bulk_timeout
 
-        if isinstance(backend, six.string_types):
+        if isinstance(backend, str):
             backend = import_from_string(backend)
 
         self.backend = backend(*backend_args, **backend_kwargs)
