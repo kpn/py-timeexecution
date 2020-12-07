@@ -3,16 +3,12 @@ Time Execution decorator
 """
 import socket
 import time
-import warnings
 
 import six
 from fqn_decorators import Decorator
 from fqn_decorators.asynchronous import AsyncDecorator
 from pkgsettings import Settings
 
-from .deprecation import HookDeprecatedWarning
-
-warnings.simplefilter("once", HookDeprecatedWarning)
 
 SHORT_HOSTNAME = socket.gethostname()
 
@@ -28,24 +24,14 @@ def write_metric(name, **metric):
 def _apply_hooks(hooks, response, exception, metric, func, func_args, func_kwargs):
     metadata = dict()
     for hook in hooks:
-        # backward compatibility with old hooks
-        try:
-            hook_result = hook(
-                response=response,
-                exception=exception,
-                metric=metric,
-                func=func,
-                func_args=func_args,
-                func_kwargs=func_kwargs,
-            )
-        except TypeError:
-            warnings.warn(
-                "Hook %s is outdated. Update interface by adding one more argument `func` in it." % hook.__name__,
-                HookDeprecatedWarning,
-            )
-            hook_result = hook(
-                response=response, exception=exception, metric=metric, func_args=func_args, func_kwargs=func_kwargs
-            )
+        hook_result = hook(
+            response=response,
+            exception=exception,
+            metric=metric,
+            func=func,
+            func_args=func_args,
+            func_kwargs=func_kwargs,
+        )
 
         if hook_result:
             metadata.update(hook_result)
