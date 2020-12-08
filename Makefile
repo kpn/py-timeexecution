@@ -18,7 +18,8 @@ clean: pyclean
 venv: PYTHON?=python3.7
 venv:
 	$(PYTHON) -m venv venv
-	venv/bin/pip install -U "pip>=7.0" -q
+	# FIXME: unpin when https://github.com/pypa/pip/issues/9215 is fixed
+	venv/bin/pip install -U "pip==20.2" -q
 	venv/bin/pip install -r requirements.txt '.[all]'
 
 ## Code style

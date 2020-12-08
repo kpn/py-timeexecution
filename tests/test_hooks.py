@@ -146,30 +146,6 @@ class TestTimeExecution:
             assert metadata["local_hook_key"] == "local hook value"
             collector.clean()
 
-    def test_old_hooks(self):
-        def old_hook(response, exception, metric, func_args, func_kwargs):
-            return dict(old_hook="old_hook")
-
-        def new_hook(response, exception, metric, func, func_args, func_kwargs):
-            return dict(new_hook="new_hook", attribute_from_class=func.__self__.attr)
-
-        class Class:
-            attr = 1
-
-            @time_execution
-            def method(self):
-                return True
-
-        with settings(backends=[CollectorBackend()], hooks=[old_hook, new_hook]):
-            collector = settings.backends[0]
-            Class().method()
-
-            assert len(collector.metrics) == 1
-            metadata = collector.metrics[0][get_fqn(Class().method)]
-            assert "old_hook" in metadata
-            assert "new_hook" in metadata
-            assert metadata["attribute_from_class"] == Class.attr
-
     def test_hook(self):
         def test_args(**kwargs):
             assert "response" in kwargs

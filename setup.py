@@ -23,10 +23,8 @@ setup(
         "fqn-decorators>=1.2.5,<3.0.0",
     ],
     extras_require={
-        "all": ["influxdb>=2.11", "kafka-python>=1.4.3", "elasticsearch>=5,<7.0.0"],
-        "elasticsearch": ["elasticsearch>=5,<7.0.0"],
-        "influxdb": ["influxdb>=2.11"],
-        "kafka": ["kafka-python>=1.4.3"],
+        "all": ["elasticsearch>=5.0.0,<7.0.0"],
+        "elasticsearch": ["elasticsearch>=5.0.0,<7.0.0"],
     },
     packages=find_packages(exclude=["tests*"]),
     tests_require=["tox"],
