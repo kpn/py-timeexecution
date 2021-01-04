@@ -354,6 +354,13 @@ There is a Makefile with a few targets that we use often:
 
 ``make test`` command will run tests for the python versions specified in ``tox.ini`` spinning up all necessary services via docker.
 
+In some cases (on Ubuntu 18.04) the Elasticsearch Docker image might not be able to start and will exit with the following error::
+
+    max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+    
+This can be solved by adding the following line to `/etc/sysctl.conf`::
+
+    vm.max_map_count=262144
 
 .. _Grafana: http://grafana.org/
 .. _Kibana: https://www.elastic.co/products/kibana
