@@ -17,7 +17,7 @@ ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST")
 class TestConnectionErrors(TestBaseBackend):
     @mock.patch("time_execution.backends.elasticsearch.logger")
     def test_error_resilience(self, mocked_logger):
-        backend = ElasticsearchBackend(hosts=["non-existant-domain"])
+        backend = ElasticsearchBackend(hosts=["non-existent-domain"], max_retries=1)
         # ensure index and mapping setup failures are caught and logged
         self.assertEqual(2, len(mocked_logger.error.call_args_list))
         # ensure write failure is caught and logged
