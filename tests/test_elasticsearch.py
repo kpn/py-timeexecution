@@ -145,3 +145,10 @@ class TestTimeExecution(TestBaseBackend):
         with es_index_error_ctx:
             self.backend.bulk_write(metrics)
             mocked_logger.warning.assert_called_once_with("bulk_write metrics %r failure %r", metrics, transport_error)
+
+    @mock.patch("time_execution.backends.elasticsearch.ElasticsearchBackend._setup_mapping")
+    @mock.patch("time_execution.backends.elasticsearch.ElasticsearchBackend._setup_index")
+    def test_do_not_create_index(self, setup_index, setup_mapping):
+        ElasticsearchBackend(ELASTICSEARCH_HOST, index="unittest", create_index=False)
+        setup_index.assert_not_called()
+        setup_mapping.assert_not_called()

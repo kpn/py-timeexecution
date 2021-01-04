@@ -11,7 +11,14 @@ logger = logging.getLogger(__name__)
 
 class ElasticsearchBackend(BaseMetricsBackend):
     def __init__(
-        self, hosts=None, index="metrics", doc_type="metric", index_pattern="{index}-{date:%Y.%m.%d}", *args, **kwargs
+        self,
+        hosts=None,
+        index="metrics",
+        doc_type="metric",
+        index_pattern="{index}-{date:%Y.%m.%d}",
+        create_index=True,
+        *args,
+        **kwargs,
     ):
         # Assign these in the backend as they are needed when writing metrics
         # to elasticsearch
@@ -22,15 +29,15 @@ class ElasticsearchBackend(BaseMetricsBackend):
         # setup the client
         self.client = Elasticsearch(hosts=hosts, *args, **kwargs)
 
-        # ensure the index is created
-        try:
-            self._setup_index()
-        except TransportError as exc:
-            logger.error("index setup error %r", exc)
-        try:
-            self._setup_mapping()
-        except TransportError as exc:
-            logger.error("mapping setup error %r", exc)
+        if create_index:
+            try:
+                self._setup_index()
+            except TransportError as exc:
+                logger.error("index setup error %r", exc)
+            try:
+                self._setup_mapping()
+            except TransportError as exc:
+                logger.error("mapping setup error %r", exc)
 
     def get_index(self):
         return self.index_pattern.format(index=self.index, date=datetime.now())
