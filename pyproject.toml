@@ -27,3 +27,7 @@ omit = ["tests/*"]
 
 [build-system]
 requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+
+[[tool.mypy.overrides]]
+module = ["mock", "freezegun", "elasticsearch.*", "fqn_decorators.*", "pkgsettings", "setuptools", "Queue"]
+ignore_missing_imports = true
