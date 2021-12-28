@@ -1,6 +1,33 @@
 # Changelog
 
 
+## (unreleased)
+
+### Other
+
+* Created new github action for unit tests. [Ricardo Alves]
+
+* Added name to build job. [Ricardo Alves]
+
+* Added github action to publish new version. [Ricardo Alves]
+
+* Created new github action for unit tests. [Ricardo Alves]
+
+
+## 5.1.0 (2021-01-04)
+
+### New
+
+* NEW: flag to skip index creation on class instantiation. [Bart Veraart]
+
+### Optimizations
+
+* OPT: Speed up error_resilience test by decreasing max_retries. [Bart Veraart]
+
+* OPT: update readme with some comments about starting elasticsearch. [Bart Veraart]
+
+
+
 ## 5.0.0 (2020-12-01)
 
 ### Other
