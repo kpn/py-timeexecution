@@ -1,11 +1,12 @@
 Time Execution
 ==============
 
-.. image:: https://secure.travis-ci.org/kpn-digital/py-timeexecution.svg?branch=master
-    :target:  http://travis-ci.org/kpn-digital/py-timeexecution?branch=master
 
-.. image:: https://img.shields.io/codecov/c/github/kpn-digital/py-timeexecution/master.svg
-    :target: http://codecov.io/github/kpn-digital/py-timeexecution?branch=master
+.. image:: https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml/badge.svg?branch=master
+    :target: https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml
+
+.. image:: https://img.shields.io/codecov/c/github/kpn/py-timeexecution/master.svg
+    :target: http://codecov.io/github/kpn/py-timeexecution?branch=master
 
 .. image:: https://img.shields.io/pypi/v/timeexecution.svg
     :target: https://pypi.org/project/timeexecution
