@@ -1,5 +1,5 @@
 # This Makefile requires the following commands to be available:
-# * python3.7
+# * python3.10
 # * docker
 
 SRC:=time_execution tests setup.py
@@ -15,7 +15,7 @@ clean: pyclean
 	-rm -rf venv
 	-rm -rf .tox
 
-venv: PYTHON?=python3.7
+venv: PYTHON?=python3.10
 venv:
 	$(PYTHON) -m venv venv
 	# FIXME: unpin when https://github.com/pypa/pip/issues/9215 is fixed
