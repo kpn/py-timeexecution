@@ -17,6 +17,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
         doc_type="metric",
         index_pattern="{index}-{date:%Y.%m.%d}",
         create_index=True,
+        pipeline=None,
         *args,
         **kwargs,
     ):
@@ -25,6 +26,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
         self.index = index
         self.doc_type = doc_type
         self.index_pattern = index_pattern
+        self.pipeline = pipeline
 
         # setup the client
         self.client = Elasticsearch(hosts=hosts, *args, **kwargs)
@@ -83,7 +85,11 @@ class ElasticsearchBackend(BaseMetricsBackend):
             data["timestamp"] = datetime.utcnow()
 
         try:
-            self.client.index(index=self.get_index(), doc_type=self.doc_type, id=None, body=data)
+            index_params = {"index": self.get_index(), "doc_type": self.doc_type, "id": None, "body": data}
+            if self.pipeline:
+                index_params["pipeline"] = self.pipeline
+
+            self.client.index(**index_params)
         except TransportError as exc:
             logger.warning("writing metric %r failure %r", data, exc)
 

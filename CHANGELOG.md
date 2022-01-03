@@ -1,7 +1,11 @@
 # Changelog
 
 
-## 6.0.1 (2022-01-03)
+## 6.1.0 (2022-01-03)
+
+### New
+
+* NEW: Added new optional parameter "pipeline" to use document pre-processing in Elasticsearch. [Ricardo Alves]
 
 ### Optimizations
 
