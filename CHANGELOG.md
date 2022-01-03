@@ -1,17 +1,15 @@
 # Changelog
 
 
-## (unreleased)
+## 6.0.0 (2022-01-03)
+
+### Optimizations
+
+* OPT: Using github actions instead of travis-ci. [Ricardo Alves]
 
 ### Other
 
-* Created new github action for unit tests. [Ricardo Alves]
-
-* Added name to build job. [Ricardo Alves]
-
-* Added github action to publish new version. [Ricardo Alves]
-
-* Created new github action for unit tests. [Ricardo Alves]
+* BREAK: Drop support for Python3.6. Add Python 3.9 and 3.10. [Ricardo Alves]
 
 
 ## 5.1.0 (2021-01-04)
