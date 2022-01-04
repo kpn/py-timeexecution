@@ -38,9 +38,9 @@ class ElasticTestMixin(object):
         return metrics
 
 
-class TestTimeExecution(TestBaseBackend):
+class BaseTestTimeExecutionElasticSearch(TestBaseBackend):
     def setUp(self):
-        super(TestTimeExecution, self).setUp()
+        super(BaseTestTimeExecutionElasticSearch, self).setUp()
 
         self.backend = ElasticsearchBackend(ELASTICSEARCH_HOST, index="unittest")
         settings.configure(backends=[self.backend])
@@ -55,6 +55,8 @@ class TestTimeExecution(TestBaseBackend):
     def _query_backend(self, name):
         return ElasticTestMixin._query_backend(self.backend, name)
 
+
+class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
     def test_time_execution(self):
 
         count = 4
@@ -152,3 +154,19 @@ class TestTimeExecution(TestBaseBackend):
         ElasticsearchBackend(ELASTICSEARCH_HOST, index="unittest", create_index=False)
         setup_index.assert_not_called()
         setup_mapping.assert_not_called()
+
+    @mock.patch("elasticsearch.client.Elasticsearch.index")
+    def test_pipeline_not_present(self, mocked_index):
+        go()
+        assert "pipeline" not in mocked_index.call_args
+
+    @mock.patch("elasticsearch.client.Elasticsearch.index")
+    def test_pipeline_present(self, mocked_index):
+        backend = ElasticsearchBackend(ELASTICSEARCH_HOST, index="pipelinetest", pipeline="custom-pipeline")
+
+        with settings(backends=[backend]):
+            go()
+            assert "pipeline" in mocked_index.call_args.kwargs
+            assert mocked_index.call_args.kwargs["pipeline"] == "custom-pipeline"
+
+        ElasticTestMixin._clear(backend)

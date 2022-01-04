@@ -1,6 +1,18 @@
 # Changelog
 
 
+## 6.1.0 (2022-01-03)
+
+### New
+
+* NEW: Added new optional parameter "pipeline" to use document pre-processing in Elasticsearch. [Ricardo Alves]
+
+### Optimizations
+
+* OPT: Changed readme to markdown and fixed Python versions in setup.py. [Ricardo Alves]
+
+
+
 ## 6.0.0 (2022-01-03)
 
 ### Optimizations
@@ -10,6 +22,7 @@
 ### Other
 
 * BREAK: Drop support for Python3.6. Add Python 3.9 and 3.10. [Ricardo Alves]
+
 
 
 ## 5.1.0 (2021-01-04)

@@ -4,7 +4,7 @@
 # so we ignoring mypy checks on this package
 from setuptools import find_packages, setup
 
-with open("README.rst") as f:
+with open("README.md") as f:
     long_description = f.read()
 
 
@@ -14,10 +14,10 @@ setup(
     setup_requires=["setuptools_scm"],
     description="Python project",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown'",
     author="KPN DE Platform",
     author_email="de-platform@kpn.com",
-    url="https://github.com/kpn-digital/py-timeexecution",
+    url="https://github.com/kpn/py-timeexecution",
     install_requires=[
         "pkgsettings>=0.9.2",
         "fqn-decorators>=1.2.5,<3.0.0",
@@ -38,9 +38,10 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
