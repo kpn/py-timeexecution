@@ -1,6 +1,5 @@
----
-title: Time Execution
----
+# Time Execution
+
 
 [![image](https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml)
 [![image](https://img.shields.io/codecov/c/github/kpn/py-timeexecution/master.svg)](http://codecov.io/github/kpn/py-timeexecution?branch=master)
@@ -15,20 +14,20 @@ backends. With the help of [Grafana](http://grafana.org/) or
 [Kibana](https://www.elastic.co/products/kibana) you can easily use
 these metrics to create meaningful monitoring dashboards.
 
-# Features
+## Features
 
 -   Sending data to multiple backends (e.g. ElasticSearch)
 -   Custom backends
 -   Hooks to include additional data per metric.
 
-# Available backends
+## Available backends
 
 -   Elasticsearch \>=5,\<7
 
 *Note:* In the past, this package supported other backends out of the box, namely InfluxDB and Kafka. Although, these have been removed.
 
 
-# Installation
+## Installation
 
 If you want to use it with the `ElasticSearchBackend`:
 
@@ -43,7 +42,7 @@ between them:
 $ pip install timeexecution[all]
 ```
 
-# Usage
+## Usage
 
 To use this package you decorate the functions you want to time its
 execution. Every wrapped function will create a metric consisting of 3
@@ -160,7 +159,7 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(hello())
 ```
 
-# Hooks {#usage-hooks}
+## Hooks {#usage-hooks}
 
 `time_execution` supports hooks where you can change the metric before
 its being sent to the backend.
@@ -237,7 +236,7 @@ def celery_task(self, **kwargs):
     return True
 ```
 
-# Manually sending metrics
+## Manually sending metrics
 
 You can also send any metric you have manually to the backend. These
 will not add the default values and will not hit the hooks.
@@ -253,7 +252,7 @@ write_metric('cpu.load.5m', value=loadavg[1])
 write_metric('cpu.load.15m', value=loadavg[2])
 ```
 
-# Custom Backend
+## Custom Backend
 
 Writing a custom backend is very simple, all you need to do is create a
 class with a [write]{.title-ref} method. It is not required to extend
@@ -269,7 +268,7 @@ class MetricsPrinter(BaseMetricsBackend):
         print(name, data)
 ```
 
-# Example scenario
+## Example scenario
 
 In order to read the metrics, e.g. using ElasticSearch as a backend, the
 following lucene query could be used:
@@ -284,7 +283,7 @@ the [ElasticSearch Query
 DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
 reference.
 
-# Contribute
+## Contribute
 
 You have something to contribute? Great! There are a few things that may
 come in handy.
