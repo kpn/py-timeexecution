@@ -1,6 +1,5 @@
 # Time Execution
 
-
 [![image](https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/kpn/py-timeexecution/actions/workflows/tests.yml)
 [![image](https://img.shields.io/codecov/c/github/kpn/py-timeexecution/master.svg)](http://codecov.io/github/kpn/py-timeexecution?branch=master)
 [![image](https://img.shields.io/pypi/v/timeexecution.svg)](https://pypi.org/project/timeexecution)
@@ -24,7 +23,7 @@ these metrics to create meaningful monitoring dashboards.
 
 -   Elasticsearch \>=5,\<7
 
-*Note:* In the past, this package supported other backends out of the box, namely InfluxDB and Kafka. Although, these have been removed.
+*Note:* In previous versions, this package supported other backends out of the box, namely InfluxDB and Kafka. Although, these have been removed.
 
 
 ## Installation
@@ -42,18 +41,25 @@ between them:
 $ pip install timeexecution[all]
 ```
 
+## Configuration
+
+The package can be configured with the follwing settings:
+
+-   `origin`: A string that will be included in field origin in all metrics. This is particularly useful in an environment where the same backend (e.g. an Elasticsearch index) is shared by multiple applications or micro-services, so each application uses it's own origin identifier.
+-   `backends`: Specify the backend where to send metrics.
+-   `hooks`: Hooks allow you to include additional fields as part of the metric data. [Learn more about how to use hooks](#hooks)
+-   `duration_field` - the field to be used to store the duration measured. If no value is provided, the default will be `value`.
+
 ## Usage
 
 To use this package you decorate the functions you want to time its
 execution. Every wrapped function will create a metric consisting of 3
 default values:
 
--   `name` - The name of the series the metric will be stored in. Byt
-    default, timeexecution will use the fully qualified name of the
-    decorated method or function (e.g. ).
--   `value` - The time it took in ms for the wrapped function to
-    complete
+-   `name` - The name of the series the metric will be stored in. By default, timeexecution will use the fully qualified name of the decorated method or function (e.g. `src.api.views.ExampleView.get`).
+-   `value` - The time it took in ms for the wrapped function to complete
 -   `hostname` - The hostname of the machine the code is running on
+
 
 See the following example
 
@@ -98,7 +104,7 @@ This will result in an entry in Elasticsearch:
 ]
 ```
 
-It\'s also possible to run the backend in a different thread with logic behind it, to send metrics in bulk mode.
+It's also possible to use a thread. It will basically add metrics to a queue, and these will be then sent in bulk to the configured backend. This setup is useful to avoid the impact of network latency or backend performance.
 
 For example:
 
@@ -117,10 +123,10 @@ threaded_backend = ThreadedBackend(
 
 # there is also possibility to configure backend by import path, like:
 threaded_backend = ThreadedBackend(
-    backend="time_execution.backends.kafka.KafkaBackend",
+    backend="time_execution.backends.elasticsearch.ElasticsearchBackend",
     #: any other configuration belongs to backend
     backend_kwargs={
-        "hosts" : "kafka",
+        "hosts" : "elasticsearch",
         "topic": "metrics"
     }
 )
@@ -159,7 +165,7 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(hello())
 ```
 
-## Hooks {#usage-hooks}
+## Hooks
 
 `time_execution` supports hooks where you can change the metric before
 its being sent to the backend.
@@ -176,8 +182,7 @@ A hook will always get 3 arguments:
 -   `func_args` - Original args received by the wrapped function.
 -   `func_kwargs` - Original kwargs received by the wrapped function.
 
-From within a hook you can change the [name]{.title-ref} if you want the
-metrics to be split into multiple series.
+From within a hook you can change the `name` if you want the metrics to be split into multiple series.
 
 See the following example how to setup hooks.
 
@@ -196,7 +201,7 @@ settings.configure(backends=[backend], hooks=[my_hook])
 ```
 
 There is also possibility to create decorator with custom set of hooks.
-It is needed for example to track [celery]{.title-ref} tasks.
+It is needed for example to track [celery]{https://docs.celeryproject.org} tasks.
 
 ``` python
 from multiprocessing import current_process
