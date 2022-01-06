@@ -15,40 +15,45 @@ these metrics to create meaningful monitoring dashboards.
 
 ## Features
 
--   Sending data to multiple backends (e.g. ElasticSearch)
--   Custom backends
--   Hooks to include additional data per metric.
+* Sending data to multiple backends (e.g. ElasticSearch)
+* Custom backends
+* Hooks to include additional data per metric.
 
 ## Available backends
 
--   Elasticsearch \>=5,\<7
+* Elasticsearch \>=5,\<7
 
-*Note:* In previous versions, this package supported other backends out of the box, namely InfluxDB and Kafka. Although, these have been removed.
-
+*Note:* In previous versions, this package supported other backends out of
+the box, namely InfluxDB and Kafka. Although, these have been removed.
 
 ## Installation
 
 If you want to use it with the `ElasticSearchBackend`:
 
 ``` bash
-$ pip install timeexecution[elasticsearch]
+\$ pip install timeexecution[elasticsearch]
 ```
 
 or if you prefer to have all backends available and easily switch
 between them:
 
 ``` bash
-$ pip install timeexecution[all]
+\$ pip install timeexecution[all]
 ```
 
 ## Configuration
 
 The package can be configured with the follwing settings:
 
--   `origin`: A string that will be included in field origin in all metrics. This is particularly useful in an environment where the same backend (e.g. an Elasticsearch index) is shared by multiple applications or micro-services, so each application uses it's own origin identifier.
--   `backends`: Specify the backend where to send metrics.
--   `hooks`: Hooks allow you to include additional fields as part of the metric data. [Learn more about how to use hooks](#hooks)
--   `duration_field` - the field to be used to store the duration measured. If no value is provided, the default will be `value`.
+* `origin`: A string that will be included in field origin in all metrics. This
+is particularly useful in an environment where the same backend (e.g. an
+Elasticsearch index) is shared by multiple applications or micro-services, so
+each application uses it's own origin identifier.
+* `backends`: Specify the backend where to send metrics.
+* `hooks`: Hooks allow you to include additional fields as part of the
+metricdata. [Learn more about how to use hooks](#hooks)
+* `duration_field` - the field to be used to store the duration measured. If no
+value is provided, the default will be `value`.
 
 ## Usage
 
@@ -56,10 +61,11 @@ To use this package you decorate the functions you want to time its
 execution. Every wrapped function will create a metric consisting of 3
 default values:
 
--   `name` - The name of the series the metric will be stored in. By default, timeexecution will use the fully qualified name of the decorated method or function (e.g. `src.api.views.ExampleView.get`).
--   `value` - The time it took in ms for the wrapped function to complete
--   `hostname` - The hostname of the machine the code is running on
-
+* `name` - The name of the series the metric will be stored in. By default,
+timeexecution will use the fully qualified name of the
+decorated method or function (e.g. `src.api.views.ExampleView.get`).
+* `value` - The time it took in ms for the wrapped function to complete.
+* `hostname` - The hostname of the machine the code is running on.
 
 See the following example
 
@@ -104,7 +110,9 @@ This will result in an entry in Elasticsearch:
 ]
 ```
 
-It's also possible to use a thread. It will basically add metrics to a queue, and these will be then sent in bulk to the configured backend. This setup is useful to avoid the impact of network latency or backend performance.
+It's also possible to use a thread. It will basically add metrics to a queue,
+and these will be then sent in bulk to the configured backend. This setup is
+useful to avoid the impact of network latency or backend performance.
 
 For example:
 
@@ -139,8 +147,8 @@ settings.configure(backends=[threaded_backend])
 def hello():
     return 'World'
 
-# Now when we call hello() we put metrics in queue to send it either in some configurable time later
-# or when queue will reach configurable limit.
+# Now when we call hello() we put metrics in queue to send it either in some
+# configurable time later or when queue will reach configurable limit.
 hello()
 ```
 
@@ -176,13 +184,14 @@ based on the response of the wrapped function.
 
 A hook will always get 3 arguments:
 
--   `response` - The returned value of the wrapped function
--   `exception` - The raised exception of the wrapped function
--   `metric` - A dict containing the data to be send to the backend
--   `func_args` - Original args received by the wrapped function.
--   `func_kwargs` - Original kwargs received by the wrapped function.
+* `response` - The returned value of the wrapped function
+* `exception` - The raised exception of the wrapped function
+* `metric` - A dict containing the data to be send to the backend
+* `func_args` - Original args received by the wrapped function.
+* `func_kwargs` - Original kwargs received by the wrapped function.
 
-From within a hook you can change the `name` if you want the metrics to be split into multiple series.
+From within a hook you can change the `name` if you want the metrics to be
+split into multiple series.
 
 See the following example how to setup hooks.
 
@@ -201,7 +210,7 @@ settings.configure(backends=[backend], hooks=[my_hook])
 ```
 
 There is also possibility to create decorator with custom set of hooks.
-It is needed for example to track [celery]{https://docs.celeryproject.org} tasks.
+It is needed for example to track [celery](https://docs.celeryproject.org) tasks.
 
 ``` python
 from multiprocessing import current_process
@@ -297,10 +306,10 @@ Testing in this project is done via tox with the use of docker.
 
 There is a Makefile with a few targets that we use often:
 
--   `make test`
--   `make format`
--   `make lint`
--   `make build`
+* `make test`
+* `make format`
+* `make lint`
+* `make build`
 
 `make test` command will run tests for the python versions specified in
 `tox.ini` spinning up all necessary services via docker.
@@ -308,8 +317,12 @@ There is a Makefile with a few targets that we use often:
 In some cases (on Ubuntu 18.04) the Elasticsearch Docker image might not
 be able to start and will exit with the following error:
 
-    max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
 
 This can be solved by adding the following line to \`/etc/sysctl.conf\`:
 
-    vm.max_map_count=262144
+```
+vm.max_map_count=262144
+```
