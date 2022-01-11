@@ -45,15 +45,10 @@ between them:
 
 The package can be configured with the follwing settings:
 
-* `origin`: A string that will be included in field origin in all metrics. This
-is particularly useful in an environment where the same backend (e.g. an
-Elasticsearch index) is shared by multiple applications or micro-services, so
-each application uses it's own origin identifier.
+* `origin`: A string that will be included in field origin in all metrics. This is particularly useful in an environment where the same backend (e.g. an Elasticsearch index) is shared by multiple applications or micro-services, so each application uses it's own origin identifier.
 * `backends`: Specify the backend where to send metrics.
-* `hooks`: Hooks allow you to include additional fields as part of the
-metricdata. [Learn more about how to use hooks](#hooks)
-* `duration_field` - the field to be used to store the duration measured. If no
-value is provided, the default will be `value`.
+* `hooks`: Hooks allow you to include additional fields as part of the metric data. [Learn more about how to use hooks](#hooks)
+* `duration_field` - the field to be used to store the duration measured. If no value is provided, the default will be `value`.
 
 ## Usage
 
@@ -61,9 +56,7 @@ To use this package you decorate the functions you want to time its
 execution. Every wrapped function will create a metric consisting of 3
 default values:
 
-* `name` - The name of the series the metric will be stored in. By default,
-timeexecution will use the fully qualified name of the
-decorated method or function (e.g. `src.api.views.ExampleView.get`).
+* `name` - The name of the series the metric will be stored in. By default, timeexecution will use the fully qualified name of the decorated method or function (e.g. `src.api.views.ExampleView.get`).
 * `value` - The time it took in ms for the wrapped function to complete.
 * `hostname` - The hostname of the machine the code is running on.
 
@@ -116,7 +109,7 @@ useful to avoid the impact of network latency or backend performance.
 
 For example:
 
-``` python
+```python
 from time_execution import settings, time_execution
 from time_execution.backends.threaded import ThreadedBackend
 
