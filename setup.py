@@ -14,7 +14,7 @@ setup(
     setup_requires=["setuptools_scm"],
     description="Python project",
     long_description=long_description,
-    long_description_content_type="text/markdown'",
+    long_description_content_type="text/markdown",
     author="KPN DE Platform",
     author_email="de-platform@kpn.com",
     url="https://github.com/kpn/py-timeexecution",
