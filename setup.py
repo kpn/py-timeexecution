@@ -23,8 +23,8 @@ setup(
         "fqn-decorators>=1.2.5,<3.0.0",
     ],
     extras_require={
-        "all": ["elasticsearch>=5.0.0,<7.0.0"],
-        "elasticsearch": ["elasticsearch>=5.0.0,<7.0.0"],
+        "all": ["elasticsearch>=7.0.0,<9.0.0"],
+        "elasticsearch": ["elasticsearch>=7.0.0,<9.0.0"],
     },
     packages=find_packages(exclude=["tests*"]),
     tests_require=["tox"],

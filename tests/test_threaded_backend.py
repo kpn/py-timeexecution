@@ -16,7 +16,7 @@ from time_execution.backends import elasticsearch
 from time_execution.backends.threaded import ThreadedBackend
 from time_execution.decorator import SHORT_HOSTNAME
 
-from .test_elasticsearch import ELASTICSEARCH_HOST, ElasticTestMixin
+from .test_elasticsearch import ELASTICSEARCH_URI, ElasticTestMixin
 
 
 class TestTimeExecution(TestBaseBackend):
@@ -71,7 +71,14 @@ class TestTimeExecution(TestBaseBackend):
         mocked_write = self.mocked_backend.bulk_write
         self.assertEqual(1, self.backend.fetched_items)
         mocked_write.assert_called_with(
-            [{"timestamp": now, "hostname": SHORT_HOSTNAME, "name": "tests.conftest.go", "value": 0.0}]
+            [
+                {
+                    "timestamp": now,
+                    "hostname": SHORT_HOSTNAME,
+                    "name": "tests.conftest.go",
+                    "value": 0.0,
+                }
+            ]
         )
 
     def test_double_start(self):
@@ -185,7 +192,7 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
         self.qtime = 0.1
         self.backend = ThreadedBackend(
             elasticsearch.ElasticsearchBackend,
-            backend_args=(ELASTICSEARCH_HOST,),
+            backend_args=(ELASTICSEARCH_URI,),
             backend_kwargs=dict(index="threaded-metrics"),
             queue_timeout=self.qtime,
         )
@@ -196,12 +203,16 @@ class TestElastic(TestBaseBackend, ElasticTestMixin):
         go()
         time.sleep(2 * self.backend.bulk_timeout)
         metrics = self._query_backend(self.backend.backend, go.get_fqn())
-        self.assertEqual(metrics["hits"]["total"], 1)
+        self.assertEqual(metrics["hits"]["total"]["value"], 1)
+        self.assertEqual(metrics["hits"]["total"]["relation"], "eq")
 
 
 class TestSetupBackend:
     def test_backend_importpath(self):
-        backend = ThreadedBackend(backend="time_execution.backends.elasticsearch.ElasticsearchBackend")
+        backend = ThreadedBackend(
+            backend_args=(ELASTICSEARCH_URI,),
+            backend="time_execution.backends.elasticsearch.ElasticsearchBackend",
+        )
 
         assert isinstance(backend.backend, elasticsearch.ElasticsearchBackend)
 
@@ -210,6 +221,9 @@ class TestSetupBackend:
             ThreadedBackend(backend="time_execution.backends.wrong_path.NewBackend")
 
     def test_backend_class(self):
-        backend = ThreadedBackend(backend=elasticsearch.ElasticsearchBackend)
+        backend = ThreadedBackend(
+            backend_args=(ELASTICSEARCH_URI,),
+            backend=elasticsearch.ElasticsearchBackend,
+        )
 
         assert isinstance(backend.backend, elasticsearch.ElasticsearchBackend)

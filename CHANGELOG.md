@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.0.0 (2022-08-24)
+
+### Breaking changes
+
+ * BREAK: remove index creation, drop support for elasticsearch 6
 
 ## 6.1.0 (2022-01-03)
 
