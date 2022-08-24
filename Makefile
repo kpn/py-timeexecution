@@ -9,6 +9,8 @@ pyclean:
 	-find . -name "*.pyc" -delete
 	-rm -rf *.egg-info build
 	-rm -rf coverage*.xml .coverage
+	-rm -rf .pytest_cache
+	-rm -rf .mypy_cache
 
 .PHONY: clean
 clean: pyclean

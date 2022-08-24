@@ -11,15 +11,15 @@ from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
 from time_execution.backends.elasticsearch import ElasticsearchBackend
 
-ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST")
+# This variable is set by tox-docker. See https://tox-docker.readthedocs.io/en/latest/#configuration
+ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "localhost")
+ELASTICSEARCH_URI = f"http://{ELASTICSEARCH_HOST}:9200"
 
 
 class TestConnectionErrors(TestBaseBackend):
     @mock.patch("time_execution.backends.elasticsearch.logger")
     def test_error_resilience(self, mocked_logger):
-        backend = ElasticsearchBackend(hosts=["non-existent-domain"], max_retries=1)
-        # ensure index and mapping setup failures are caught and logged
-        self.assertEqual(2, len(mocked_logger.error.call_args_list))
+        backend = ElasticsearchBackend(hosts=["https://non-existent-domain:1234"], max_retries=1)
         # ensure write failure is caught and logged
         backend.write(name="test_error_resilience")
         mocked_logger.warning.assert_called_once()
@@ -28,13 +28,16 @@ class TestConnectionErrors(TestBaseBackend):
 class ElasticTestMixin(object):
     @staticmethod
     def _clear(backend):
-        backend.client.indices.delete(backend.index, ignore=404)
-        backend.client.indices.delete("{}*".format(backend.index), ignore=404)
+        backend.client.indices.delete(index=backend.index, ignore=404)
+        backend.client.indices.delete(index="{}*".format(backend.index), ignore=404)
 
     @staticmethod
     def _query_backend(backend, name):
-        backend.client.indices.refresh(backend.get_index())
-        metrics = backend.client.search(index=backend.get_index(), body={"query": {"term": {"name": name}}})
+        backend.client.indices.refresh(index=backend.get_index())
+        metrics = backend.client.search(
+            index=backend.get_index(),
+            body={"query": {"term": {"name.keyword": name}}},
+        )
         return metrics
 
 
@@ -42,7 +45,7 @@ class BaseTestTimeExecutionElasticSearch(TestBaseBackend):
     def setUp(self):
         super(BaseTestTimeExecutionElasticSearch, self).setUp()
 
-        self.backend = ElasticsearchBackend(ELASTICSEARCH_HOST, index="unittest")
+        self.backend = ElasticsearchBackend(ELASTICSEARCH_URI, index="unittest")
         settings.configure(backends=[self.backend])
         self._clear()
 
@@ -65,7 +68,8 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
             go()
 
         metrics = self._query_backend(go.get_fqn())
-        self.assertEqual(metrics["hits"]["total"], count)
+        self.assertEqual(metrics["hits"]["total"]["value"], count)
+        self.assertEqual(metrics["hits"]["total"]["relation"], "eq")
 
         for metric in metrics["hits"]["hits"]:
             self.assertTrue("value" in metric["_source"])
@@ -82,10 +86,12 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
         Dummy().go("hello", world="world")
 
         metrics = self._query_backend(get_fqn(go))
-        self.assertEqual(metrics["hits"]["total"], 1)
+        self.assertEqual(metrics["hits"]["total"]["value"], 1)
+        self.assertEqual(metrics["hits"]["total"]["relation"], "eq")
 
         metrics = self._query_backend(get_fqn(Dummy().go))
-        self.assertEqual(metrics["hits"]["total"], 1)
+        self.assertEqual(metrics["hits"]["total"]["value"], 1)
+        self.assertEqual(metrics["hits"]["total"]["relation"], "eq")
 
     def test_hook(self):
         def test_args(**kwargs):
@@ -107,7 +113,8 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
 
         transport_error = TransportError("mocked error")
         es_index_error_ctx = mock.patch(
-            "time_execution.backends.elasticsearch.Elasticsearch.index", side_effect=transport_error
+            "time_execution.backends.elasticsearch.Elasticsearch.index",
+            side_effect=transport_error,
         )
         frozen_time_ctx = freeze_time("2016-07-13")
 
@@ -115,7 +122,11 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
             self.backend.write(name="test:metric", value=None)
             mocked_logger.warning.assert_called_once_with(
                 "writing metric %r failure %r",
-                {"timestamp": datetime(2016, 7, 13), "value": None, "name": "test:metric"},
+                {
+                    "timestamp": datetime(2016, 7, 13),
+                    "value": None,
+                    "name": "test:metric",
+                },
                 transport_error,
             )
 
@@ -135,25 +146,19 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
         ]
         self.backend.bulk_write(metrics)
         query_result = self._query_backend("metric.name")
-        self.assertEqual(len(metrics), query_result["hits"]["total"])
+        self.assertEqual(len(metrics), query_result["hits"]["total"]["value"])
 
     @mock.patch("time_execution.backends.elasticsearch.logger")
     def test_bulk_write_error(self, mocked_logger):
         transport_error = TransportError("mocked error")
         es_index_error_ctx = mock.patch(
-            "time_execution.backends.elasticsearch.Elasticsearch.bulk", side_effect=transport_error
+            "time_execution.backends.elasticsearch.Elasticsearch.bulk",
+            side_effect=transport_error,
         )
         metrics = [1, 2, 3]
         with es_index_error_ctx:
             self.backend.bulk_write(metrics)
             mocked_logger.warning.assert_called_once_with("bulk_write metrics %r failure %r", metrics, transport_error)
-
-    @mock.patch("time_execution.backends.elasticsearch.ElasticsearchBackend._setup_mapping")
-    @mock.patch("time_execution.backends.elasticsearch.ElasticsearchBackend._setup_index")
-    def test_do_not_create_index(self, setup_index, setup_mapping):
-        ElasticsearchBackend(ELASTICSEARCH_HOST, index="unittest", create_index=False)
-        setup_index.assert_not_called()
-        setup_mapping.assert_not_called()
 
     @mock.patch("elasticsearch.client.Elasticsearch.index")
     def test_pipeline_not_present(self, mocked_index):
@@ -162,7 +167,11 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
 
     @mock.patch("elasticsearch.client.Elasticsearch.index")
     def test_pipeline_present(self, mocked_index):
-        backend = ElasticsearchBackend(ELASTICSEARCH_HOST, index="pipelinetest", pipeline="custom-pipeline")
+        backend = ElasticsearchBackend(
+            ELASTICSEARCH_URI,
+            index="pipelinetest",
+            pipeline="custom-pipeline",
+        )
 
         with settings(backends=[backend]):
             go()
