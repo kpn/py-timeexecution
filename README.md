@@ -21,7 +21,8 @@ these metrics to create meaningful monitoring dashboards.
 
 ## Available backends
 
-* Elasticsearch \>=7,\<9
+* Elasticsearch client \>=8,\<9
+* Elasticsearch server \>=7,\<9
 
 *Note:* In previous versions, this package supported other backends out of
 the box, namely InfluxDB and Kafka. Although, these have been removed.
