@@ -56,7 +56,8 @@ class ThreadedBackend(BaseMetricsBackend):
         self.start_worker()
 
     def write(self, name, **data):
-        data["timestamp"] = datetime.datetime.utcnow()
+        if "timestamp" not in data:
+            data["timestamp"] = datetime.datetime.utcnow()
         try:
             self._queue.put_nowait((name, data))
         except Full:

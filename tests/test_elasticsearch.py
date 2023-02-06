@@ -61,7 +61,6 @@ class BaseTestTimeExecutionElasticSearch(TestBaseBackend):
 
 class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
     def test_time_execution(self):
-
         count = 4
 
         for i in range(count):
@@ -110,7 +109,6 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
 
     @mock.patch("time_execution.backends.elasticsearch.logger")
     def test_error_warning(self, mocked_logger):
-
         transport_error = TransportError("mocked error")
         es_index_error_ctx = mock.patch(
             "time_execution.backends.elasticsearch.Elasticsearch.index",
@@ -132,7 +130,6 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
 
     def test_with_origin(self):
         with settings(origin="unit_test"):
-
             go()
 
             for metric in self._query_backend(go.get_fqn())["hits"]["hits"]:
