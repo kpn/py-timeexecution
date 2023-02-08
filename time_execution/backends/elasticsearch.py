@@ -69,7 +69,12 @@ class ElasticsearchBackend(BaseMetricsBackend):
         for metric in metrics:
             actions.append({"index": {"_index": index}})
             actions.append(metric)
+
+        bulk_params = {"operations": actions}
+        if self.pipeline:
+            bulk_params["pipeline"] = self.pipeline
+
         try:
-            self.client.bulk(operations=actions)
+            self.client.bulk(**bulk_params)
         except TransportError as exc:
             logger.warning("bulk_write metrics %r failure %r", metrics, exc)
