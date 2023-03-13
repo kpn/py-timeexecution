@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "pkgsettings>=0.9.2",
         "fqn-decorators>=1.2.5,<3.0.0",
+        "typing-extensions>=4.5.0,<5.0.0",
     ],
     extras_require={
         "all": ["elasticsearch>=8.0.0,<9.0.0"],
