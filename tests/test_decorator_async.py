@@ -9,7 +9,7 @@ from time_execution import time_execution_async
 @pytest.fixture
 def patch_backend(monkeypatch):
     m = Mock()
-    monkeypatch.setattr("time_execution.decorator.write_metric", m)
+    monkeypatch.setattr("time_execution.timed.write_metric", m)
     return m
 
 

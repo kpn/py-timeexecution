@@ -20,8 +20,7 @@ clean: pyclean
 venv: PYTHON?=python3.10
 venv:
 	$(PYTHON) -m venv venv
-	# FIXME: unpin when https://github.com/pypa/pip/issues/9215 is fixed
-	venv/bin/pip install -U "pip==20.2" -q
+	venv/bin/pip install -U pip -q
 	venv/bin/pip install -r requirements.txt '.[all]'
 
 ## Code style

@@ -11,10 +11,9 @@ from freezegun import freeze_time
 
 from tests.conftest import go
 from tests.test_base_backend import TestBaseBackend
-from time_execution import settings
+from time_execution import SHORT_HOSTNAME, settings
 from time_execution.backends import elasticsearch
 from time_execution.backends.threaded import ThreadedBackend
-from time_execution.decorator import SHORT_HOSTNAME
 
 from .test_elasticsearch import ELASTICSEARCH_URI, ElasticTestMixin
 
