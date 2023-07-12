@@ -151,6 +151,7 @@ class TestTimeExecution:
             assert "response" in kwargs
             assert "exception" in kwargs
             assert "metric" in kwargs
+            assert "name" in kwargs["metric"]
             return dict()
 
         def test_metadata(*args, **kwargs):

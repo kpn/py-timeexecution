@@ -70,7 +70,12 @@ class Timed(AbstractContextManager):
 
         # Apply the registered hooks, and collect the metadata they might
         # return to be stored with the metrics.
-        metadata = self._apply_hooks(hooks=hooks, response=self.result, exception=__exc_val, metric=metric)
+        metadata = self._apply_hooks(
+            hooks=hooks,
+            response=self.result,
+            exception=__exc_val,
+            metric={**metric, "name": self._fqn},
+        )
 
         metric.update(metadata)
         write_metric(name=self._fqn, **metric)
