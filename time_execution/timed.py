@@ -58,7 +58,7 @@ class Timed(AbstractContextManager):
     ) -> None:
         duration_millis = round(default_timer() - self._start_time, 3) * 1000.0
 
-        metric = {settings.duration_field: duration_millis, "hostname": SHORT_HOSTNAME}
+        metric = {settings.duration_field: duration_millis, "hostname": SHORT_HOSTNAME, "name": self._fqn}
 
         origin = getattr(settings, "origin", None)
         if origin:
@@ -74,11 +74,11 @@ class Timed(AbstractContextManager):
             hooks=hooks,
             response=self.result,
             exception=__exc_val,
-            metric={**metric, "name": self._fqn},
+            metric=metric,
         )
 
         metric.update(metadata)
-        write_metric(name=self._fqn, **metric)
+        write_metric(**metric)  # type: ignore[arg-type]
 
     def _apply_hooks(self, hooks, response, exception, metric) -> Dict:
         metadata = dict()
