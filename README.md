@@ -176,13 +176,16 @@ With a hook you can add additional and change existing fields. This can
 be useful for cases where you would like to add a column to the metric
 based on the response of the wrapped function.
 
-A hook will always get 3 arguments:
+### Simple callable hook
 
-* `response` - The returned value of the wrapped function
-* `exception` - The raised exception of the wrapped function
-* `metric` - A dict containing the data to be send to the backend
-* `func_args` - Original args received by the wrapped function.
-* `func_kwargs` - Original kwargs received by the wrapped function.
+A function which is called after calling the decorated function and before sending the metrics. It receives the following arguments:
+
+* `response`: the returned value of the wrapped function
+* `exception`: exception raised the wrapped function, if any
+* `metric`: a dictionary containing the data to be sent to the backend
+* `func`: the decorated function itself
+* `func_args`: original args received by the wrapped function.
+* `func_kwargs`: original kwargs received by the wrapped function.
 
 From within a hook you can change the `name` if you want the metrics to be
 split into multiple series.
@@ -242,6 +245,23 @@ def celery_task(self, **kwargs):
 @time_execution(extra_hooks=[celery_hook], disable_default_hooks=True)
 def celery_task(self, **kwargs):
     return True
+```
+
+### Generator hook
+
+A generator hook works similarly to a simple hook, but also allows to run an arbitrary code just before the decorated function is called.
+It receives `func`, `func_args`, and `func_kwargs` as its arguments, whilst `response`, `exception`, and `metric` are sent later at the `yield` site:
+
+```python
+def generator_hook(func, func_args, func_kwargs) -> Generator[
+    None,
+    Tuple[Any, Optional[BaseException], Dict[str, Any]],  # response, exception, and metrics
+    Optional[Dict[str, Any]],
+]:
+    print("This runs before the decorated function")
+    (response, exception, metrics) = yield
+    print("This runs after the decorated function")
+    ...
 ```
 
 ## Manually sending metrics

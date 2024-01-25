@@ -2,7 +2,7 @@ import pytest
 from fqn_decorators import get_fqn
 
 from tests.conftest import go
-from time_execution import settings, time_execution
+from time_execution import GeneratorHookReturnType, settings, time_execution
 from time_execution.backends.base import BaseMetricsBackend
 
 
@@ -231,3 +231,40 @@ class TestTimeExecution:
 
         with settings(hooks=[hook]):
             go(param1=param)
+
+    def test_generator_hook(self) -> None:
+        is_started = False
+
+        def generator_hook(func, func_args, func_kwargs) -> GeneratorHookReturnType:
+            assert func_args == (42,)
+            assert func_kwargs == {"bar": 100500}
+            assert not is_started, "the decorated function should not run just yet"
+            (response, _exception, _metrics) = yield
+            assert is_started
+            assert response == "response"
+            return {"key": "value"}
+
+        @time_execution(disable_default_hooks=True, extra_hooks=(generator_hook,))
+        def go(foo: int, *, bar: int) -> str:
+            nonlocal is_started
+            is_started = True
+            return "response"
+
+        def asserts(_name, **data):
+            assert data["key"] == "value"
+
+        with settings(backends=[AssertBackend(asserts)]):
+            assert go(42, bar=100500) == "response"
+
+    def test_generator_hook_did_not_stop(self) -> None:
+        def generator_hook(func, func_args, func_kwargs) -> GeneratorHookReturnType:
+            yield
+            yield  # this extra `yield` is incorrect
+            return {}
+
+        @time_execution(disable_default_hooks=True, extra_hooks=(generator_hook,))
+        def go() -> None:
+            return None
+
+        with pytest.raises(RuntimeError, match="generator hook did not stop"):
+            go()
