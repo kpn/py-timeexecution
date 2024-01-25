@@ -1,18 +1,20 @@
-"""
-Time Execution decorator
-"""
+"""Time Execution decorator"""
+
+from __future__ import annotations
+
 from asyncio import iscoroutinefunction
+from collections.abc import Iterable
 from functools import wraps
-from typing import Any, Callable, List, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, cast
 
 import fqn_decorators
 from pkgsettings import Settings
-from typing_extensions import overload
+from typing_extensions import Protocol, overload
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 settings = Settings()
-settings.configure(backends=[], hooks=[], duration_field="value")
+settings.configure(backends=(), hooks=(), duration_field="value")
 
 
 def write_metric(name: str, **metric: Any) -> None:
@@ -29,7 +31,7 @@ def time_execution(__wrapped: _F) -> _F:
 def time_execution(
     *,
     get_fqn: Callable[[Any], str] = fqn_decorators.get_fqn,
-    extra_hooks: Optional[List] = None,
+    extra_hooks: Optional[Iterable[Hook]] = None,
     disable_default_hooks: bool = False,
 ) -> Callable[[_F], _F]:
     """
@@ -74,3 +76,18 @@ def time_execution(__wrapped=None, get_fqn: Callable[[Any], str] = fqn_decorator
 
 # `time_execution` supports async out of the box.
 time_execution_async = time_execution
+
+
+class Hook(Protocol):
+    """Hook callback protocol."""
+
+    def __call__(
+        self,
+        response: Any,
+        exception: Optional[BaseException],
+        metric: Dict[str, Any],
+        func: Callable[..., Any],
+        func_args: Tuple[Any, ...],
+        func_kwargs: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        ...
