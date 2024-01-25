@@ -1,6 +1,12 @@
 name: Unit tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
 
 jobs:
   build:
@@ -8,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -16,7 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Tox and other dependencies
-      run: pip install tox tox-docker wheel twine
+      run: pip install tox tox-docker wheel twine 'setuptools; python_version >= "3.12"'
     - name: Run tests with Tox
       # Run tox using the version of Python in `PATH`
       run: tox -e py
