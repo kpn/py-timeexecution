@@ -5,11 +5,11 @@ from __future__ import annotations
 from asyncio import iscoroutinefunction
 from collections.abc import Iterable
 from functools import wraps
-from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, cast
+from typing import Any, Callable, Dict, Generator, Optional, Tuple, TypeVar, cast
 
 import fqn_decorators
 from pkgsettings import Settings
-from typing_extensions import Protocol, overload
+from typing_extensions import Protocol, TypeAlias, overload
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
@@ -31,7 +31,7 @@ def time_execution(__wrapped: _F) -> _F:
 def time_execution(
     *,
     get_fqn: Callable[[Any], str] = fqn_decorators.get_fqn,
-    extra_hooks: Optional[Iterable[Hook]] = None,
+    extra_hooks: Optional[Iterable[Hook | GeneratorHook]] = None,
     disable_default_hooks: bool = False,
 ) -> Callable[[_F], _F]:
     """
@@ -90,4 +90,26 @@ class Hook(Protocol):
         func_args: Tuple[Any, ...],
         func_kwargs: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
-        ...
+        ...  # fmt:skip
+
+
+GeneratorHookReturnType: TypeAlias = Generator[
+    None, Tuple[Any, Optional[BaseException], Dict[str, Any]], Optional[Dict[str, Any]]
+]
+
+
+class GeneratorHook(Protocol):
+    """
+    Generator-type hook.
+
+    This kind of hook gets called before the target function.
+    Response, exception, and metrics are sent into the generator after the target function finishes.
+    """
+
+    def __call__(
+        self,
+        func: Callable[..., Any],
+        func_args: Tuple[Any, ...],
+        func_kwargs: Dict[str, Any],
+    ) -> GeneratorHookReturnType:
+        ...  # fmt:skip
