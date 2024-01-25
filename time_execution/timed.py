@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import AbstractContextManager
 from socket import gethostname
 from timeit import default_timer
 from types import TracebackType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type
 
-from time_execution import settings, write_metric
+from time_execution import Hook, settings, write_metric
 
 SHORT_HOSTNAME = gethostname()
 
@@ -35,7 +36,7 @@ class Timed(AbstractContextManager):
         fqn: str,
         call_args: Tuple[Any, ...],
         call_kwargs: Dict[str, Any],
-        extra_hooks: Optional[List] = None,
+        extra_hooks: Optional[Iterable[Hook]] = None,
         disable_default_hooks: bool = False,
     ) -> None:
         self.result: Optional[Any] = None
@@ -64,9 +65,9 @@ class Timed(AbstractContextManager):
         if origin:
             metric["origin"] = origin
 
-        hooks = self._extra_hooks or []
+        hooks = self._extra_hooks or ()
         if not self._disable_default_hooks:
-            hooks = settings.hooks + hooks
+            hooks = (*settings.hooks, *hooks)
 
         # Apply the registered hooks, and collect the metadata they might
         # return to be stored with the metrics.
