@@ -83,6 +83,7 @@ class Hook(Protocol):
 
     def __call__(
         self,
+        *,
         response: Any,
         exception: Optional[BaseException],
         metric: Dict[str, Any],
@@ -108,6 +109,7 @@ class GeneratorHook(Protocol):
 
     def __call__(
         self,
+        *,
         func: Callable[..., Any],
         func_args: Tuple[Any, ...],
         func_kwargs: Dict[str, Any],
