@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from contextlib import AbstractContextManager
-from inspect import isgenerator, isgeneratorfunction
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
+from inspect import iscoroutinefunction, isgenerator, isgeneratorfunction
 from socket import gethostname
 from timeit import default_timer
 from types import TracebackType
@@ -13,10 +13,9 @@ from time_execution import GeneratorHook, GeneratorHookReturnType, Hook, setting
 SHORT_HOSTNAME = gethostname()
 
 
-class Timed(AbstractContextManager):
+class Base:
     """
-    Both the sync and async decorators require the same logic around the wrapped function.
-    This context manager encapsulates the shared behaviour to avoid duplicating the code.
+    Base class for context managers encapsulates the shared behaviour to avoid duplicating the code.
     """
 
     __slots__ = (
@@ -59,19 +58,14 @@ class Timed(AbstractContextManager):
             for hook in hooks
         )
 
-    def __enter__(self) -> Timed:
+    def enter(self) -> Any:
         self._start_time = default_timer()
         for hook in self._hooks:
             if isgenerator(hook):
                 hook.send(None)  # start a generator hook
         return self
 
-    def __exit__(
-        self,
-        __exc_type: Optional[Type[BaseException]],
-        __exc_val: Optional[BaseException],
-        __exc_tb: Optional[TracebackType],
-    ) -> None:
+    def get_metric(self) -> Dict[str, Any]:
         duration_millis = round(default_timer() - self._start_time, 3) * 1000.0
 
         metric = {settings.duration_field: duration_millis, "hostname": SHORT_HOSTNAME, "name": self._fqn}
@@ -80,38 +74,95 @@ class Timed(AbstractContextManager):
         if origin:
             metric["origin"] = origin
 
-        # Apply the registered hooks, and collect the metadata they might
-        # return to be stored with the metrics.
-        metadata = self._apply_hooks(
-            response=self.result,
-            exception=__exc_val,
-            metric=metric,
-        )
+        return metric
+
+    def apply_hook(
+        self,
+        hook: Any,
+        exception: Optional[BaseException],
+        metric: Dict[str, Any],
+        metadata: Dict[str, Any],
+    ) -> None:
+        if not isgenerator(hook):
+            hook_result = cast(Hook, hook)(
+                response=self.result,
+                exception=exception,
+                metric=metric,
+                func=self._wrapped,
+                func_args=self._call_args,
+                func_kwargs=self._call_kwargs,
+            )
+        else:
+            # Generator hook: send the results and obtain custom metadata.
+            try:
+                hook.send((self.result, exception, metric))
+            except StopIteration as e:
+                hook_result = e.value
+            else:
+                raise RuntimeError("generator hook did not stop")
+        if hook_result:
+            metadata.update(hook_result)
+
+
+class Timed(AbstractContextManager, Base):
+
+    def __enter__(self) -> Timed:
+        return self.enter()
+
+    def __exit__(
+        self,
+        __exc_type: Optional[Type[BaseException]],
+        __exc_val: Optional[BaseException],
+        __exc_tb: Optional[TracebackType],
+    ) -> None:
+
+        metadata: Dict[str, Any] = dict()
+        metric: Dict[str, Any] = self.get_metric()
+
+        for hook in self._hooks:
+            self.apply_hook(hook=hook, exception=__exc_val, metric=metric, metadata=metadata)
 
         metric.update(metadata)
         write_metric(**metric)  # type: ignore[arg-type]
 
-    def _apply_hooks(self, response, exception, metric) -> Dict:
+
+class TimedAsync(AbstractAsyncContextManager, Base):
+
+    async def __aenter__(self) -> Timed:
+        return self.enter()
+
+    async def __aexit__(
+        self,
+        __exc_type: Optional[Type[BaseException]],
+        __exc_val: Optional[BaseException],
+        __exc_tb: Optional[TracebackType],
+    ) -> None:
+
         metadata: Dict[str, Any] = dict()
+        metric: Dict[str, Any] = self.get_metric()
+
         for hook in self._hooks:
-            if not isgenerator(hook):
-                # Simple exit hook, call it directly.
-                hook_result = cast(Hook, hook)(
-                    response=response,
-                    exception=exception,
-                    metric=metric,
-                    func=self._wrapped,
-                    func_args=self._call_args,
-                    func_kwargs=self._call_kwargs,
-                )
-            else:
-                # Generator hook: send the results and obtain custom metadata.
-                try:
-                    hook.send((response, exception, metric))
-                except StopIteration as e:
-                    hook_result = e.value
-                else:
-                    raise RuntimeError("generator hook did not stop")
-            if hook_result:
-                metadata.update(hook_result)
-        return metadata
+            await self._apply_hook(hook=hook, exception=__exc_val, metric=metric, metadata=metadata)
+
+        metric.update(metadata)
+        write_metric(**metric)  # type: ignore[arg-type]
+
+    async def _apply_hook(
+        self,
+        hook: Any,
+        exception: Optional[BaseException],
+        metric: Dict[str, Any],
+        metadata: Dict[str, Any],
+    ) -> None:
+        if iscoroutinefunction(hook):
+            hook_result = await hook(
+                response=self.result,
+                exception=exception,
+                metric=metric,
+                func=self._wrapped,
+                func_args=self._call_args,
+                func_kwargs=self._call_kwargs,
+            )
+            metadata.update(hook_result)
+        else:
+            self.apply_hook(hook=hook, exception=exception, metric=metric, metadata=metadata)
