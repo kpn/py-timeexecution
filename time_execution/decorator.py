@@ -45,7 +45,7 @@ def time_execution(
 
 
 def time_execution(__wrapped=None, get_fqn: Callable[[Any], str] = fqn_decorators.get_fqn, **kwargs):
-    from time_execution.timed import Timed  # work around the circular dependency
+    from time_execution.timed import Timed, TimedAsync  # work around the circular dependency
 
     def wrap(__wrapped: _F) -> _F:
         fqn = get_fqn(__wrapped)
@@ -62,7 +62,9 @@ def time_execution(__wrapped=None, get_fqn: Callable[[Any], str] = fqn_decorator
 
             @wraps(__wrapped)
             async def wrapper(*call_args, **call_kwargs):
-                with Timed(wrapped=__wrapped, call_args=call_args, call_kwargs=call_kwargs, fqn=fqn, **kwargs) as timed:
+                async with TimedAsync(
+                    wrapped=__wrapped, call_args=call_args, call_kwargs=call_kwargs, fqn=fqn, **kwargs
+                ) as timed:
                     timed.result = await __wrapped(*call_args, **call_kwargs)
                     return timed.result
 

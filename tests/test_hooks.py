@@ -2,7 +2,7 @@ import pytest
 from fqn_decorators import get_fqn
 
 from tests.conftest import go
-from time_execution import GeneratorHookReturnType, settings, time_execution
+from time_execution import GeneratorHookReturnType, settings, time_execution, time_execution_async
 from time_execution.backends.base import BaseMetricsBackend
 
 
@@ -29,8 +29,38 @@ def local_hook(**kwargs):
     return dict(local_hook_key="local hook value")
 
 
+async def async_local_hook(**kwargs):
+    return dict(async_local_hook="async_local_hook value")
+
+
+async def async_global_hook(**kwargs):
+    return dict(async_global_hook="async_global_hook value")
+
+
 def global_hook(**kwargs):
     return dict(global_hook_key="global hook value")
+
+
+class TestAsyncHooks:
+    pytestmark = pytest.mark.asyncio
+
+    async def test_async_hooks(self):
+        with settings(backends=[CollectorBackend()], hooks=[global_hook, async_global_hook]):
+            collector = settings.backends[0]
+
+            @time_execution_async(extra_hooks=[local_hook, async_local_hook])
+            async def func_local_hook(*args, **kwargs):
+                return True
+
+            await func_local_hook()
+
+            assert len(collector.metrics) == 1
+            metadata = collector.metrics[0][func_local_hook.get_fqn()]
+            assert metadata["local_hook_key"] == "local hook value"
+            assert metadata["global_hook_key"] == "global hook value"
+            assert metadata["async_local_hook"] == "async_local_hook value"
+            assert metadata["async_global_hook"] == "async_global_hook value"
+            collector.clean()
 
 
 class TestTimeExecution:
