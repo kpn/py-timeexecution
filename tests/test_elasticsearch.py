@@ -11,9 +11,16 @@ from tests.test_base_backend import TestBaseBackend
 from time_execution import settings
 from time_execution.backends.elasticsearch import ElasticsearchBackend
 
-# This variable is set by tox-docker. See https://tox-docker.readthedocs.io/en/latest/#configuration
-ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "localhost")
-ELASTICSEARCH_URI = f"http://{ELASTICSEARCH_HOST}:9200"
+# These variables are set by tox-docker. See https://tox-docker.readthedocs.io/en/latest/#configuration
+ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST")
+if not ELASTICSEARCH_HOST:
+    raise RuntimeError("`ELASTICSEARCH_HOST` is not set")
+
+ELASTICSEARCH_PORT = os.getenv("ELASTICSEARCH_9200_TCP_PORT")
+if not ELASTICSEARCH_PORT:
+    raise RuntimeError("`ELASTICSEARCH_9200_TCP_PORT` is not set")
+
+ELASTICSEARCH_URI = f"http://{ELASTICSEARCH_HOST}:{ELASTICSEARCH_PORT}"
 
 
 class TestConnectionErrors(TestBaseBackend):
