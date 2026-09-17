@@ -269,7 +269,7 @@ class TestTimeExecution:
             assert func_args == (42,)
             assert func_kwargs == {"bar": 100500}
             assert not is_started, "the decorated function should not run just yet"
-            (response, _exception, _metrics) = yield
+            response, _exception, _metrics = yield
             assert is_started
             assert response == "response"
             return {"key": "value"}

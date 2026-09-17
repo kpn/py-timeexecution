@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import TransportError
+from elasticsearch.exceptions import BadRequestError, TransportError
 
 from time_execution.backends.base import BaseMetricsBackend
 
@@ -29,7 +29,7 @@ class ElasticsearchBackend(BaseMetricsBackend):
         self.client = Elasticsearch(hosts=hosts, *args, **kwargs)
 
     def get_index(self):
-        return self.index_pattern.format(index=self.index, date=datetime.now())
+        return self.index_pattern.format(index=self.index, date=datetime.now(timezone.utc).replace(tzinfo=None))
 
     def write(self, name, **data):
         """
@@ -41,20 +41,24 @@ class ElasticsearchBackend(BaseMetricsBackend):
         """
 
         data["name"] = name
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         if not ("timestamp" in data):
-            data["timestamp"] = datetime.utcnow()
+            data["timestamp"] = now
+        if not ("@timestamp" in data):
+            data["@timestamp"] = now
 
         try:
             index_params = {
                 "index": self.get_index(),
                 "id": None,
                 "body": data,
+                "op_type": "create",
             }
             if self.pipeline:
                 index_params["pipeline"] = self.pipeline
 
             self.client.index(**index_params)
-        except TransportError as exc:
+        except (BadRequestError, TransportError) as exc:
             logger.warning("writing metric %r failure %r", data, exc)
 
     def bulk_write(self, metrics):
@@ -66,8 +70,14 @@ class ElasticsearchBackend(BaseMetricsBackend):
         """
         actions = []
         index = self.get_index()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         for metric in metrics:
-            actions.append({"index": {"_index": index}})
+            if not ("timestamp" in metric):
+                metric["timestamp"] = now
+            if not ("@timestamp" in metric):
+                metric["@timestamp"] = now
+
+            actions.append({"create": {"_index": index}})
             actions.append(metric)
 
         bulk_params = {"operations": actions}
@@ -76,5 +86,5 @@ class ElasticsearchBackend(BaseMetricsBackend):
 
         try:
             self.client.bulk(**bulk_params)
-        except TransportError as exc:
+        except (BadRequestError, TransportError) as exc:
             logger.warning("bulk_write metrics %r failure %r", metrics, exc)
