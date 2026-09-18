@@ -129,6 +129,7 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
                 "writing metric %r failure %r",
                 {
                     "timestamp": datetime(2016, 7, 13),
+                    "@timestamp": datetime(2016, 7, 13),
                     "value": None,
                     "name": "test:metric",
                 },
@@ -159,7 +160,11 @@ class TestTimeExecution(BaseTestTimeExecutionElasticSearch):
             "time_execution.backends.elasticsearch.Elasticsearch.bulk",
             side_effect=transport_error,
         )
-        metrics = [1, 2, 3]
+        metrics = [
+            {"name": "metric.name", "value": 1, "timestamp": 1},
+            {"name": "metric.name", "value": 2, "timestamp": 2},
+            {"name": "metric.name", "value": 3, "timestamp": 3},
+        ]
         with es_index_error_ctx:
             self.backend.bulk_write(metrics)
             mocked_logger.warning.assert_called_once_with("bulk_write metrics %r failure %r", metrics, transport_error)
