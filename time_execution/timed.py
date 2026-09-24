@@ -62,7 +62,8 @@ class Base:
         self._start_time = default_timer()
         for hook in self._hooks:
             if isgenerator(hook):
-                hook.send(None)  # start a generator hook
+                gen = cast(GeneratorHookReturnType, hook)
+                next(gen)  # advance to the first yield
         return self
 
     def get_metric(self) -> Dict[str, Any]:
@@ -94,8 +95,9 @@ class Base:
             )
         else:
             # Generator hook: send the results and obtain custom metadata.
+            gen = cast(GeneratorHookReturnType, hook)
             try:
-                hook.send((self.result, exception, metric))
+                gen.send((self.result, exception, metric))
             except StopIteration as e:
                 hook_result = e.value
             else:
